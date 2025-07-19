@@ -26,6 +26,8 @@ const StoryPage: React.FC = () => {
   const [loadingRecommendations, setLoadingRecommendations] = useState(false);
   const [searchingDestinations, setSearchingDestinations] = useState(false);
   const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
+  const [recommendedPlaces, setRecommendedPlaces] = useState<any[]>([]);
+  const [loadingPlaces, setLoadingPlaces] = useState(false);
 
   useEffect(() => {
     // Load content from cache when switching content types
@@ -112,6 +114,9 @@ const StoryPage: React.FC = () => {
     setSearchDestinationInput('');
     setShowDestinationSuggestions(false);
     setSearchDestinationResults([]);
+    
+    // Clear previous place recommendations when destination changes
+    setRecommendedPlaces([]);
   };
 
   const checkPersonaData = () => {
@@ -225,6 +230,11 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
         [selectedContentType]: content
       };
       setContentCache(updatedCache);
+      
+      // If this is a travel plan and we have a destination with location, fetch recommended places
+      if (selectedContentType === 'travel' && selectedTravelDestination?.location) {
+        fetchRecommendedPlaces();
+      }
     } catch (error) {
       console.error('Error generating content:', error);
       setGeneratedContent('Sorry, there was an error generating your content. Please try again.');
@@ -233,6 +243,20 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
     }
   };
 
+  const fetchRecommendedPlaces = async () => {
+    if (!selectedTravelDestination?.location) return;
+    
+    setLoadingPlaces(true);
+    try {
+      const { lat, lon } = selectedTravelDestination.location;
+      const places = await qlooService.getRecommendedPlaces(lat, lon);
+      setRecommendedPlaces(places);
+    } catch (error) {
+      console.error('Error fetching recommended places:', error);
+    } finally {
+      setLoadingPlaces(false);
+    }
+  };
 
   const copyToClipboard = () => {
     navigator.clipboard.writeText(generatedContent);
@@ -366,6 +390,135 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
             </div>
           </motion.div>
         </div>
+
+        {/* Recommended Places Section - Only show after itinerary is generated */}
+        {selectedContentType === 'travel' && generatedContent && selectedTravelDestination?.location && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mt-8"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-2xl font-semibold text-white flex items-center gap-2">
+                <MapPin className="h-6 w-6 text-green-400" />
+                Recommended Places in {selectedTravelDestination.name}
+              </h3>
+              {loadingPlaces && (
+                <div className="animate-spin w-6 h-6 border-2 border-green-400 border-t-transparent rounded-full"></div>
+              )}
+            </div>
+            
+            {loadingPlaces ? (
+              <div className="text-center py-12">
+                <div className="animate-spin w-12 h-12 border-2 border-green-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                <p className="text-gray-400">Finding amazing places for you...</p>
+              </div>
+            ) : (
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {recommendedPlaces.map((place, index) => (
+                  <motion.div
+                    key={place.entity_id}
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.3, delay: index * 0.1 }}
+                    className="group relative bg-gradient-to-br from-gray-800/80 via-gray-800/60 to-gray-900/80 backdrop-blur-xl rounded-2xl overflow-hidden border border-gray-600/30 hover:border-green-400/60 transition-all duration-500 hover:scale-[1.02] hover:shadow-xl hover:shadow-green-500/20"
+                  >
+                    {/* Image Container */}
+                    <div className="relative h-48 overflow-hidden">
+                      {place.properties?.image?.url ? (
+                        <img 
+                          src={place.properties.image.url} 
+                          alt={place.name}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-green-500/30 via-teal-500/20 to-blue-500/30 flex items-center justify-center">
+                          <MapPin className="h-16 w-16 text-green-300" />
+                        </div>
+                      )}
+                      
+                      {/* Gradient Overlay */}
+                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                      
+                      {/* Affinity Badge */}
+                      {place.query?.affinity && (
+                        <div className="absolute top-3 right-3">
+                          <div className="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-green-500/95 to-emerald-500/95 backdrop-blur-md rounded-full border border-green-400/30 shadow-lg">
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            <span className="text-white text-sm font-bold">
+                              {Math.round(place.query.affinity * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Popularity Badge */}
+                      {place.popularity && (
+                        <div className="absolute top-3 left-3">
+                          <div className="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-yellow-500/95 to-amber-500/95 backdrop-blur-md rounded-full border border-yellow-400/30 shadow-lg">
+                            <Star className="h-3 w-3 text-white" />
+                            <span className="text-white text-sm font-bold">
+                              {Math.round(place.popularity * 100)}
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Content */}
+                    <div className="p-6">
+                      <h4 className="text-xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-green-300 group-hover:to-teal-300 group-hover:bg-clip-text transition-all duration-300">
+                        {place.name}
+                      </h4>
+                      
+                      {/* Tags */}
+                      {place.tags && place.tags.length > 0 && (
+                        <div className="mb-4">
+                          <div className="flex flex-wrap gap-2">
+                            {place.tags.slice(0, 3).map((tag, tagIndex) => (
+                              <span 
+                                key={tag.tag_id || tagIndex}
+                                className="px-3 py-1 bg-gradient-to-r from-green-500/25 to-teal-500/25 text-green-200 text-xs rounded-full border border-green-400/40 font-medium"
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                            {place.tags.length > 3 && (
+                              <span className="text-gray-400 text-xs px-3 py-1 bg-gray-600/30 rounded-full border border-gray-500/30">
+                                +{place.tags.length - 3}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {/* Action Button */}
+                      <button
+                        onClick={() => {
+                          const searchQuery = encodeURIComponent(`${place.name} ${selectedTravelDestination.name}`);
+                          const mapUrl = `https://www.google.com/maps/search/?api=1&query=${searchQuery}`;
+                          window.open(mapUrl, '_blank');
+                        }}
+                        className="w-full px-4 py-3 bg-gradient-to-r from-green-500 to-teal-500 hover:from-green-600 hover:to-teal-600 text-white font-bold rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-green-500/40 hover:scale-[1.02] flex items-center gap-2 justify-center"
+                      >
+                        <MapPin className="h-4 w-4" />
+                        View on Map
+                      </button>
+                    </div>
+                  </motion.div>
+                ))}
+              </div>
+            )}
+            
+            {!loadingPlaces && recommendedPlaces.length === 0 && (
+              <div className="text-center py-12">
+                <MapPin className="h-16 w-16 text-gray-500 mx-auto mb-4" />
+                <p className="text-gray-400">No places found for this destination.</p>
+              </div>
+            )}
+          </motion.div>
+        )}
       </div>
     );
   }
@@ -584,7 +737,7 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                           </div>
                         )}
                         
-                        {/* Action Buttons */}
+                <div className="absolute z-50 w-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                         <div className="space-y-3">
                           <button
                             onClick={(e) => {

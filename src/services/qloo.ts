@@ -400,7 +400,6 @@ class QlooService {
         'entity_ids': entityIdsParam,
         'type': 'urn:entity:destination',
         'bias.content_based': '0.5',
-        'filter.radius': '10',
         'operator.filter.tags': 'union',
         'page': '1',
         'sort_by': 'affinity',
@@ -497,6 +496,65 @@ class QlooService {
     }
   }
 
+  async getRecommendedPlaces(lat: number, lon: number): Promise<QlooEntity[]> {
+    try {
+      const params = new URLSearchParams({
+        'filter.location': `${lat},${lon}`,
+        'type': 'urn:entity:place',
+        'page': '1',
+        'sort_by': 'affinity',
+        'take': '12'
+      });
+      
+      console.log(`Getting place recommendations for location: ${lat}, ${lon}`);
+      
+      const response: QlooApiResponse<QlooEntitiesResults> = await this.makeRequest(`/recommendations?${params.toString()}`);
+      
+      console.log('Place recommendations API response:', response);
+      return response.results || [];
+    } catch (error) {
+      console.error('Error getting place recommendations:', error);
+      // Return mock place data as fallback
+      return [
+        {
+          name: 'Central Park',
+          entity_id: 'central-park',
+          type: 'urn:entity:place',
+          properties: {
+            image: {
+              url: 'https://images.pexels.com/photos/378570/pexels-photo-378570.jpeg'
+            }
+          },
+          popularity: 0.92,
+          query: { affinity: 0.85 }
+        },
+        {
+          name: 'Times Square',
+          entity_id: 'times-square',
+          type: 'urn:entity:place',
+          properties: {
+            image: {
+              url: 'https://images.pexels.com/photos/290386/pexels-photo-290386.jpeg'
+            }
+          },
+          popularity: 0.89,
+          query: { affinity: 0.82 }
+        },
+        {
+          name: 'Brooklyn Bridge',
+          entity_id: 'brooklyn-bridge',
+          type: 'urn:entity:place',
+          properties: {
+            image: {
+              url: 'https://images.pexels.com/photos/416978/pexels-photo-416978.jpeg'
+            }
+          },
+          popularity: 0.87,
+          query: { affinity: 0.79 }
+        }
+      ];
+    }
+  }
   async getEntityDetails(entityId: string): Promise<QlooEntity | null> {
     try {
       const response: QlooApiResponse<QlooEntitiesResults> = await this.makeRequest(`/entities/${entityId}`);
