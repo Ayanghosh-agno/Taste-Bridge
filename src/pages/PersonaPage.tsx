@@ -458,14 +458,14 @@ Discover more at: https://tastebridge.app
       } else if (trimmedLine.startsWith('## ')) {
         // Main heading
         formattedElements.push(
-          <h2 key={index} className="text-2xl font-bold text-gray-800 mb-4 mt-6 first:mt-0">
+          <h2 key={index} className="text-2xl font-bold text-white mb-4 mt-6 first:mt-0">
             {trimmedLine.replace('## ', '')}
           </h2>
         );
       } else if (trimmedLine.startsWith('### ')) {
         // Sub heading
         formattedElements.push(
-          <h3 key={index} className="text-xl font-semibold text-gray-800 mb-3 mt-5">
+          <h3 key={index} className="text-xl font-semibold text-white mb-3 mt-5">
             {trimmedLine.replace('### ', '')}
           </h3>
         );
@@ -541,7 +541,7 @@ Discover more at: https://tastebridge.app
             <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
               {icon}
             </div>
-            <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+            <h3 className="text-2xl font-bold text-white">{title}</h3>
           </div>
           <div className="flex gap-2">
             <button
@@ -580,7 +580,7 @@ Discover more at: https://tastebridge.app
                     className="w-full h-48 object-cover rounded-xl mb-4"
                   />
                 )}
-                <h4 className="text-lg font-semibold text-gray-800 mb-2">{item.name}</h4>
+                <h4 className="text-lg font-semibold text-white mb-2">{item.name}</h4>
                 <div className="flex flex-wrap gap-2 mb-4">
                   {item.tags?.slice(0, 3).map((tag: any, tagIndex: number) => (
                     <span
@@ -618,7 +618,7 @@ Discover more at: https://tastebridge.app
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 flex items-center justify-center">
         <div className="text-center bg-white/90 backdrop-blur-md rounded-3xl p-12 shadow-2xl">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">No persona data found</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">No persona data found</h2>
           <p className="text-gray-600 mb-8">Please start by building your persona on the homepage.</p>
           <button
             onClick={() => navigate('/')}
@@ -688,7 +688,7 @@ Discover more at: https://tastebridge.app
                     </div>
                   )}
                   <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-800">{entity.name}</h3>
+                    <h3 className="text-lg font-semibold text-white">{entity.name}</h3>
                     <span className="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-sm rounded-full font-medium">
                       {entity.types?.[0]?.replace('urn:entity:', '') || entity.type?.replace('urn:entity:', '') || 'Entity'}
                     </span>
@@ -722,7 +722,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.25 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">➕ Add More to Your Identity</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">➕ Add More to Your Identity</h2>
           <div className="max-w-2xl mx-auto">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -735,7 +735,7 @@ Discover more at: https://tastebridge.app
                 }}
                 onFocus={() => searchInput && setShowSuggestions(true)}
                 placeholder="Search for more artists, movies, books, places..."
-                className="w-full pl-12 pr-4 py-4 bg-white/90 backdrop-blur-md border-2 border-gray-200 rounded-2xl text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200 shadow-lg"
+                className="w-full pl-12 pr-4 py-4 bg-white/90 backdrop-blur-md border-2 border-gray-200 rounded-2xl text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200 shadow-lg"
               />
             </div>
             
@@ -770,7 +770,7 @@ Discover more at: https://tastebridge.app
                           </div>
                         )}
                         <div className="flex-1">
-                          <h4 className="text-gray-800 font-semibold text-lg">{entity.name}</h4>
+                          <h4 className="text-white font-semibold text-lg">{entity.name}</h4>
                           <div className="flex items-center gap-2 mt-1">
                             <span className="px-3 py-1 bg-gradient-to-r from-purple-100 to-pink-100 text-purple-700 text-sm rounded-full border border-purple-200">
                               {entity.types?.[0]?.replace('urn:entity:', '') || entity.type?.replace('urn:entity:', '') || 'Entity'}
@@ -822,7 +822,7 @@ Discover more at: https://tastebridge.app
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mb-16"
           >
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">🧬 Your Taste Graph</h2>
+            <h2 className="text-3xl font-bold text-white mb-8 text-center">🧬 Your Taste Graph</h2>
             <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-xl">
               <div className="text-center mb-8">
                 <p className="text-lg text-gray-600 mb-6">
@@ -865,7 +865,7 @@ Discover more at: https://tastebridge.app
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-16"
           >
-            <h2 className="text-3xl font-bold text-gray-800 mb-12 text-center">🔍 Discoveries Based on Your Taste</h2>
+            <h2 className="text-3xl font-bold text-white mb-12 text-center">🔍 Discoveries Based on Your Taste</h2>
             
             {loadingInsights ? (
               <div className="text-center py-20">
@@ -914,7 +914,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.45 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">🎯 Target Audience Explorer</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">🎯 Target Audience Explorer</h2>
           <p className="text-lg text-gray-600 text-center mb-12">
             Discover and select audience segments that match your cultural profile
           </p>
@@ -922,7 +922,7 @@ Discover more at: https://tastebridge.app
           {/* Selected Audiences Pills */}
           {selectedAudiences.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Selected Audiences ({selectedAudiences.length})</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Selected Audiences ({selectedAudiences.length})</h3>
               <div className="flex flex-wrap gap-3">
                 {selectedAudiences.map((audience) => (
                   <div
@@ -944,7 +944,7 @@ Discover more at: https://tastebridge.app
           
           {/* Audience Type Categories */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Audience Category</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Select Audience Category</h3>
             {loadingAudienceTypes ? (
               <div className="text-center py-8">
                 <motion.div
@@ -981,7 +981,7 @@ Discover more at: https://tastebridge.app
           {/* Available Audiences */}
           {selectedAudienceType && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg font-semibold text-white mb-4">
                 Available Audiences - {audienceTypes.find(t => t.id === selectedAudienceType)?.name}
               </h3>
               
@@ -997,7 +997,7 @@ Discover more at: https://tastebridge.app
               ) : availableAudiences.length === 0 ? (
                 <div className="text-center py-12 bg-white/90 backdrop-blur-md rounded-2xl">
                   <div className="text-6xl mb-4">🔍</div>
-                  <h4 className="text-xl font-semibold text-gray-800 mb-2">No matching audiences found</h4>
+                  <h4 className="text-xl font-semibold text-white mb-2">No matching audiences found</h4>
                   <p className="text-gray-600">Try another category or tag to discover relevant audiences.</p>
                 </div>
               ) : (
@@ -1017,7 +1017,7 @@ Discover more at: https://tastebridge.app
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
-                          <h4 className="text-lg font-semibold text-gray-800 mb-1">{audience.name}</h4>
+                          <h4 className="text-lg font-semibold text-white mb-1">{audience.name}</h4>
                           {audience.description && (
                             <p className="text-gray-600 text-sm mb-3">{audience.description}</p>
                           )}
@@ -1094,7 +1094,7 @@ Discover more at: https://tastebridge.app
               transition={{ duration: 0.5 }}
               className="mt-8 p-6 bg-gradient-to-r from-blue-50 to-purple-50 rounded-2xl border border-blue-200"
             >
-              <h4 className="text-lg font-semibold text-gray-800 mb-2">
+              <h4 className="text-lg font-semibold text-white mb-2">
                 🎯 Audience Selection Summary
               </h4>
               <p className="text-gray-600 mb-4">
@@ -1151,7 +1151,7 @@ Discover more at: https://tastebridge.app
               <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
                 <Brain className="h-6 w-6" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-800">AI-Generated Summary</h3>
+              <h3 className="text-xl font-semibold text-white">AI-Generated Summary</h3>
               {loadingCulturalIdentity && (
                 <motion.div
                   animate={{ opacity: [1, 0, 1] }}
