@@ -337,6 +337,7 @@ const HomePage: React.FC = () => {
                 </div>
                 <div className="text-left">
                   <div className="font-bold text-lg">Customize Your Discovery</div>
+                  <div className="font-bold text-lg">Choose Your Interests</div>
                   <div className="text-sm text-gray-300">Choose what you want to explore</div>
                 </div>
                 <div className="flex items-center gap-2">
