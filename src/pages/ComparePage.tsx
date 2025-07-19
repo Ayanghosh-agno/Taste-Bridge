@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Zap, BarChart3, Search, X, Star } from 'lucide-react';
 import { qlooService } from '../services/qloo';
-import { togetherService } from '../services/together';
+import { togetherService, formatMarkdown } from '../services/together';
 
 const ComparePage: React.FC = () => {
   const [profile1, setProfile1] = useState('');
@@ -854,8 +854,11 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                   className="space-y-4"
                 >
                   <div className="prose prose-invert max-w-none">
-                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                      {aiAnalysis}
+                    <div className="text-gray-300 leading-relaxed">
+                      <div 
+                        className="markdown-content"
+                        dangerouslySetInnerHTML={{ __html: formatMarkdown(aiAnalysis) }}
+                      />
                     </div>
                   </div>
                   
