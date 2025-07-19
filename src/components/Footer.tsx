@@ -52,7 +52,7 @@ const Footer: React.FC = () => {
           </div>
           
           <div className="text-gray-500 text-sm">
-            <p>&copy; 2025 TasteBridge. Made with ❤️ for cultural discovery.</p>
+            <p>&copy; 2025 TasteBridge. Made with ❤️ by Ayan for cultural discovery.</p>
           </div>
         </motion.div>
       </div>
