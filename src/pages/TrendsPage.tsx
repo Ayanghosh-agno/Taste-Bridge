@@ -14,6 +14,7 @@ const TrendsPage: React.FC = () => {
   const [showTrendModal, setShowTrendModal] = useState(false);
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
 
   // Initialize dates
   useEffect(() => {
@@ -91,9 +92,44 @@ const TrendsPage: React.FC = () => {
   const handleEntityClick = async (entity: any) => {
     setSelectedEntity(entity);
     setShowTrendModal(true);
+    setSelectedLanguage('all'); // Reset language selection when opening modal
     await fetchEntityTrend(entity);
   };
 
+  // Get available languages from entity data
+  const getAvailableLanguages = (entity: any) => {
+    const languages = new Set<string>();
+    
+    // Get languages from AKAs
+    if (entity.properties?.akas) {
+      entity.properties.akas.forEach((aka: any) => {
+        if (aka.languages && Array.isArray(aka.languages)) {
+          aka.languages.forEach((lang: string) => languages.add(lang));
+        }
+      });
+    }
+    
+    // Get languages from descriptions
+    if (entity.properties?.short_descriptions) {
+      entity.properties.short_descriptions.forEach((desc: any) => {
+        if (desc.languages && Array.isArray(desc.languages)) {
+          desc.languages.forEach((lang: string) => languages.add(lang));
+        }
+      });
+    }
+    
+    return Array.from(languages).sort();
+  };
+
+  // Filter content by selected language
+  const filterByLanguage = (items: any[], selectedLang: string) => {
+    if (selectedLang === 'all') return items;
+    
+    return items.filter((item: any) => {
+      if (!item.languages || !Array.isArray(item.languages)) return false;
+      return item.languages.includes(selectedLang);
+    });
+  };
   const fetchEntityTrend = async (entity: any) => {
     if (!entity || !startDate || !endDate) return;
     
@@ -340,20 +376,47 @@ const TrendsPage: React.FC = () => {
                       <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
                         <div className="flex items-center gap-2 mb-4">
                           <Users className="h-4 w-4 text-cyan-400" />
-                          <span className="text-cyan-400 font-semibold">Alternative Names ({entity.properties.akas.length})</span>
+                          <span className="text-cyan-400 font-semibold">
+                            Alternative Names ({selectedLanguage === 'all' ? entity.properties.akas.length : filterByLanguage(entity.properties.akas, selectedLanguage).length})
+                          </span>
                         </div>
-                        <div className="max-h-24 overflow-y-auto">
+                        
+                        {/* Language Selector */}
+                        {getAvailableLanguages(entity).length > 0 && (
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Select Language:</label>
+                            <select
+                              value={selectedLanguage}
+                              onChange={(e) => setSelectedLanguage(e.target.value)}
+                              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                            >
+                              <option value="all">All Languages</option>
+                              {getAvailableLanguages(entity).map((lang) => (
+                                <option key={lang} value={lang}>
+                                  {lang.toUpperCase()}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        
+                        <div className="max-h-32 overflow-y-auto">
                           <div className="flex flex-wrap gap-2">
-                            {entity.properties.akas.map((aka: any, akaIndex: number) => (
+                            {filterByLanguage(entity.properties.akas, selectedLanguage).map((aka: any, akaIndex: number) => (
                               <span
                                 key={akaIndex}
                                 className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs rounded-full border border-cyan-400/30"
-                                title={`Languages: ${aka.languages.join(', ')}`}
+                                title={`Languages: ${aka.languages ? aka.languages.join(', ') : 'N/A'}`}
                               >
                                 {aka.value}
                               </span>
                             ))}
                           </div>
+                          {filterByLanguage(entity.properties.akas, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
+                            <div className="text-center py-4 text-gray-400">
+                              No alternative names available in {selectedLanguage.toUpperCase()}
+                            </div>
+                          )}
                         </div>
                       </div>
                     )}
@@ -363,28 +426,37 @@ const TrendsPage: React.FC = () => {
                       <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
                         <div className="flex items-center gap-2 mb-4">
                           <BarChart3 className="h-4 w-4 text-green-400" />
-                          <span className="text-green-400 font-semibold">All Descriptions ({entity.properties.short_descriptions.length})</span>
+                          <span className="text-green-400 font-semibold">
+                            All Descriptions ({selectedLanguage === 'all' ? entity.properties.short_descriptions.length : filterByLanguage(entity.properties.short_descriptions, selectedLanguage).length})
+                          </span>
                         </div>
-                        <div className="space-y-3">
-                          {entity.properties.short_descriptions.map((desc: any, descIndex: number) => (
-                            <div key={descIndex} className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/20">
-                              <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
-                                {desc.value}
-                              </div>
-                              {desc.languages && desc.languages.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-1">
-                                  {desc.languages.map((lang: string, langIndex: number) => (
-                                    <span
-                                      key={langIndex}
-                                      className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30"
-                                    >
-                                      {lang}
-                                    </span>
-                                  ))}
+                        
+                        <div className="max-h-48 overflow-y-auto">
+                          <div className="space-y-3">
+                            {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).map((desc: any, descIndex: number) => (
+                              <div key={descIndex} className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/20">
+                                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                  {desc.value}
                                 </div>
-                              )}
+                                {desc.languages && desc.languages.length > 0 && (
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {desc.languages.map((lang: string, langIndex: number) => (
+                                      <span
+                                        key={langIndex}
+                                        className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30"
+                                      >
+                                        {lang.toUpperCase()}
+                                      </span>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                          {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
+                              No descriptions available in {selectedLanguage.toUpperCase()}
                             </div>
-                          ))}
+                          )}
                         </div>
                       </div>
                     )}
