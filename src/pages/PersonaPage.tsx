@@ -922,7 +922,7 @@ Discover more at: https://tastebridge.app
           {/* Selected Audiences Pills */}
           {selectedAudiences.length > 0 && (
             <div className="mb-8">
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">Selected Audiences ({selectedAudiences.length})</h3>
+              <h3 className="text-lg font-semibold text-white mb-4">Selected Audiences ({selectedAudiences.length})</h3>
               <div className="flex flex-wrap gap-3">
                 {selectedAudiences.map((audience) => (
                   <div
