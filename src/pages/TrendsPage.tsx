@@ -100,8 +100,8 @@ const TrendsPage: React.FC = () => {
   }, []);
 
   const categories = [
-    { id: 'brand', label: 'Brands', icon: <Palette className="h-5 w-5" /> },
     { id: 'actor', label: 'Actors', icon: <Users className="h-5 w-5" /> },
+    { id: 'brand', label: 'Brands', icon: <Palette className="h-5 w-5" /> },
     { id: 'person', label: 'People', icon: <User className="h-5 w-5" /> },
     { id: 'artist', label: 'Artists', icon: <Music className="h-5 w-5" /> },
     { id: 'podcast', label: 'Podcasts', icon: <MapPin className="h-5 w-5" /> },
