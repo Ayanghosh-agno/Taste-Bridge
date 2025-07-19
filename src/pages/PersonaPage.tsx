@@ -346,6 +346,85 @@ Now generate: "Your Cultural Identity"`;
     navigator.clipboard.writeText(culturalIdentity);
   };
 
+  const formatContent = (content: string) => {
+    if (!content) return null;
+    
+    // Split content into lines
+    const lines = content.split('\n');
+    const formattedElements: JSX.Element[] = [];
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      if (!trimmedLine) {
+        // Empty line - add spacing
+        formattedElements.push(<div key={index} className="h-4" />);
+      } else if (trimmedLine.startsWith('## ')) {
+        // Main heading
+        formattedElements.push(
+          <h2 key={index} className="text-2xl font-bold text-gray-800 mb-4 mt-6 first:mt-0">
+            {trimmedLine.replace('## ', '')}
+          </h2>
+        );
+      } else if (trimmedLine.startsWith('### ')) {
+        // Sub heading
+        formattedElements.push(
+          <h3 key={index} className="text-xl font-semibold text-gray-800 mb-3 mt-5">
+            {trimmedLine.replace('### ', '')}
+          </h3>
+        );
+      } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        // Bold section headers
+        formattedElements.push(
+          <h4 key={index} className="text-lg font-semibold text-purple-700 mb-2 mt-4">
+            {trimmedLine.replace(/\*\*/g, '')}
+          </h4>
+        );
+      } else if (trimmedLine.includes('**')) {
+        // Text with bold parts
+        const parts = trimmedLine.split('**');
+        const formattedParts: (string | JSX.Element)[] = [];
+        
+        parts.forEach((part, partIndex) => {
+          if (partIndex % 2 === 1) {
+            // This is a bold part
+            formattedParts.push(
+              <span key={partIndex} className="font-semibold text-purple-700">
+                {part}
+              </span>
+            );
+          } else {
+            formattedParts.push(part);
+          }
+        });
+        
+        formattedElements.push(
+          <p key={index} className="mb-3 leading-relaxed text-gray-700">
+            {formattedParts}
+          </p>
+        );
+      } else if (trimmedLine.startsWith('- ') || trimmedLine.startsWith('* ')) {
+        // List items
+        formattedElements.push(
+          <div key={index} className="mb-2 pl-4 border-l-2 border-purple-200">
+            <span className="text-gray-700">
+              {trimmedLine.replace(/^[-*] /, '')}
+            </span>
+          </div>
+        );
+      } else {
+        // Regular paragraph
+        formattedElements.push(
+          <p key={index} className="mb-3 leading-relaxed text-gray-700">
+            {trimmedLine}
+          </p>
+        );
+      }
+    });
+    
+    return <div>{formattedElements}</div>;
+  };
+
   const InsightCarousel: React.FC<{ title: string; icon: React.ReactNode; items: any[]; type: string }> = ({ title, icon, items, type }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
     const itemsPerView = 3;
@@ -1031,8 +1110,8 @@ Now generate: "Your Cultural Identity"`;
                 transition={{ duration: 0.5 }}
                 className="prose prose-lg max-w-none"
               >
-                <p className="text-gray-700 leading-relaxed text-lg">
-                  {culturalIdentity}
+                <div className="text-gray-700 leading-relaxed text-lg">
+                  {formatContent(culturalIdentity)}
                   {loadingCulturalIdentity && (
                     <motion.span
                       animate={{ opacity: [1, 0] }}
@@ -1040,7 +1119,7 @@ Now generate: "Your Cultural Identity"`;
                       className="inline-block w-0.5 h-6 bg-purple-500 ml-1"
                     />
                   )}
-                </p>
+                </div>
                 
                 {culturalIdentity && !loadingCulturalIdentity && (
                   <div className="flex gap-3 mt-6">
