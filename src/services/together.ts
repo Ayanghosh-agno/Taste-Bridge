@@ -91,7 +91,7 @@ Keep the analysis engaging and actionable.`;
       const response = await this.makeRequest('/chat/completions', {
         method: 'POST',
         body: JSON.stringify({
-          model: 'google/gemma-2-9b-it',
+          model: 'google/gemma-3n-E4B-it',
           messages: [
             {
               role: 'system',
