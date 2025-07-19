@@ -497,6 +497,18 @@ class QlooService {
   }
 
   async getRecommendedPlaces(lat: number, lon: number): Promise<QlooEntity[]> {
+    // Get foundEntities from localStorage for personalized recommendations
+    let entityIds: string[] = [];
+    try {
+      const savedEntities = localStorage.getItem('foundEntities');
+      if (savedEntities) {
+        const entities = JSON.parse(savedEntities);
+        entityIds = entities.map((entity: any) => entity.entity_id).filter(Boolean);
+      }
+    } catch (error) {
+      console.error('Error getting foundEntities from localStorage:', error);
+    }
+
     try {
       const params = new URLSearchParams({
         'filter.location': `${lat},${lon}`,
@@ -506,7 +518,13 @@ class QlooService {
         'take': '12'
       });
       
+      // Add entity IDs for personalized recommendations
+      if (entityIds.length > 0) {
+        params.append('entity_ids', entityIds.join(','));
+      }
+      
       console.log(`Getting place recommendations for location: ${lat}, ${lon}`);
+      console.log(`Using entity IDs for personalization: ${entityIds.join(', ')}`);
       
       const response: QlooApiResponse<QlooEntitiesResults> = await this.makeRequest(`/recommendations?${params.toString()}`);
       
