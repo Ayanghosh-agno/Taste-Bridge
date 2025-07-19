@@ -658,7 +658,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Your Selected Identities</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">Your Selected Identities</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {selectedEntities.map((entity, index) => (
               <motion.div
@@ -1145,7 +1145,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.5 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">🎭 Your Cultural Identity</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">🎭 Your Cultural Identity</h2>
           <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-xl">
             <div className="flex items-center gap-4 mb-6">
               <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
