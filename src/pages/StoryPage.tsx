@@ -439,21 +439,230 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
           </div>
         </motion.div>
 
-        {/* Generate Button */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-center mb-8"
-        >
-          <button
-            onClick={generateContent}
-            disabled={loading}
-            className="px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+        {/* Travel Plan Specific UI */}
+        {selectedContentType === 'travel' && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="mb-8 space-y-8"
           >
-            {loading ? 'Generating...' : `Generate ${contentTypes.find(t => t.id === selectedContentType)?.label}`}
-          </button>
-        </motion.div>
+            {/* Recommended Destinations */}
+            <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 border border-gray-700">
+              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <MapPin className="h-5 w-5 text-purple-400" />
+                Recommended Destinations Based on Your Taste
+              </h3>
+              
+              {loadingRecommendations ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
+                  <p className="text-gray-400 mt-3">Finding perfect destinations for you...</p>
+                </div>
+              ) : (
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  {recommendedDestinations.map((destination, index) => (
+                    <motion.div
+                      key={destination.entity_id}
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3, delay: index * 0.1 }}
+                      className="group relative bg-gray-700/30 rounded-xl overflow-hidden hover:bg-gray-700/50 transition-all duration-200 cursor-pointer"
+                      onClick={() => handleDestinationSelect(destination)}
+                    >
+                      {destination.properties?.image?.url && (
+                        <img 
+                          src={destination.properties.image.url} 
+                          alt={destination.name}
+                          className="w-full h-32 object-cover"
+                        />
+                      )}
+                      <div className="p-4">
+                        <h4 className="text-white font-semibold mb-2">{destination.name}</h4>
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <Star className="h-4 w-4 text-yellow-400" />
+                            <span className="text-gray-400 text-sm">
+                              {Math.round((destination.query?.affinity || 0.8) * 100)}% match
+                            </span>
+                          </div>
+                          <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
+                            {destination.properties?.geocode?.country_code || 'Destination'}
+                          </span>
+                        </div>
+                      </div>
+                      <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                        <span className="text-white font-semibold">Select Destination</span>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Destination Search */}
+            <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 border border-gray-700">
+              <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                <Search className="h-5 w-5 text-orange-400" />
+                Or Search for a Specific Destination
+              </h3>
+              
+              <div className="relative max-w-md">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
+                  <input
+                    type="text"
+                    value={searchDestinationInput}
+                    onChange={(e) => {
+                      setSearchDestinationInput(e.target.value);
+                      handleDestinationSearch(e.target.value);
+                    }}
+                    onFocus={() => searchDestinationInput && setShowDestinationSuggestions(true)}
+                    placeholder="Search destinations..."
+                    className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  />
+                </div>
+
+                {/* Search Suggestions */}
+                {showDestinationSuggestions && (searchDestinationResults.length > 0 || searchingDestinations) && (
+                  <div className="absolute z-50 w-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                    {searchingDestinations ? (
+                      <div className="p-4 text-center">
+                        <div className="animate-spin w-6 h-6 border-2 border-orange-400 border-t-transparent rounded-full mx-auto"></div>
+                        <p className="text-gray-400 mt-2">Searching destinations...</p>
+                      </div>
+                    ) : (
+                      searchDestinationResults.map((destination, index) => (
+                        <button
+                          key={destination.entity_id || index}
+                          onClick={() => handleDestinationSelect(destination)}
+                          className="w-full p-4 text-left hover:bg-gray-700/50 transition-colors duration-200 border-b border-gray-700/50 last:border-b-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            {destination.properties?.image?.url ? (
+                              <img 
+                                src={destination.properties.image.url} 
+                                alt={destination.name}
+                                className="w-12 h-12 rounded-lg object-cover"
+                              />
+                            ) : (
+                              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center">
+                                <MapPin className="h-6 w-6 text-white" />
+                              </div>
+                            )}
+                            <div className="flex-1">
+                              <h4 className="text-white font-semibold">{destination.name}</h4>
+                              <p className="text-gray-400 text-sm">
+                                {destination.properties?.geocode?.admin1_region && 
+                                 destination.properties?.geocode?.country_code && 
+                                 `${destination.properties.geocode.admin1_region}, ${destination.properties.geocode.country_code}`}
+                              </p>
+                            </div>
+                          </div>
+                        </button>
+                      ))
+                    )}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Selected Destination & Trip Configuration */}
+            {selectedTravelDestination && (
+              <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 border border-gray-700">
+                <h3 className="text-xl font-semibold text-white mb-6 flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-green-400" />
+                  Plan Your Trip
+                </h3>
+                
+                {/* Selected Destination Display */}
+                <div className="mb-6 p-4 bg-green-500/10 border border-green-400/20 rounded-xl">
+                  <div className="flex items-center gap-4">
+                    {selectedTravelDestination.properties?.image?.url && (
+                      <img 
+                        src={selectedTravelDestination.properties.image.url} 
+                        alt={selectedTravelDestination.name}
+                        className="w-16 h-16 rounded-lg object-cover"
+                      />
+                    )}
+                    <div className="flex-1">
+                      <h4 className="text-white font-bold text-lg">{selectedTravelDestination.name}</h4>
+                      <p className="text-green-300">
+                        {selectedTravelDestination.properties?.geocode?.admin1_region && 
+                         selectedTravelDestination.properties?.geocode?.country_code && 
+                         `${selectedTravelDestination.properties.geocode.admin1_region}, ${selectedTravelDestination.properties.geocode.country_code}`}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setSelectedTravelDestination(null)}
+                      className="p-2 text-gray-400 hover:text-red-400 transition-colors duration-200"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Number of Days Selection */}
+                <div className="mb-6">
+                  <label className="block text-white font-semibold mb-3">Trip Duration</label>
+                  <div className="flex items-center gap-4">
+                    <input
+                      type="number"
+                      min="1"
+                      max="30"
+                      value={numberOfDays}
+                      onChange={(e) => setNumberOfDays(parseInt(e.target.value) || 5)}
+                      className="w-20 px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-green-400"
+                    />
+                    <span className="text-gray-300">days</span>
+                    <div className="flex gap-2 ml-4">
+                      {[3, 5, 7, 10].map(days => (
+                        <button
+                          key={days}
+                          onClick={() => setNumberOfDays(days)}
+                          className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                            numberOfDays === days
+                              ? 'bg-green-500 text-white'
+                              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          }`}
+                        >
+                          {days}d
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Create Itinerary Button */}
+                <button
+                  onClick={generateContent}
+                  disabled={loading || !selectedTravelDestination}
+                  className="px-8 py-4 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? 'Creating Itinerary...' : `Create ${numberOfDays}-Day Itinerary`}
+                </button>
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* Generate Button for non-travel content */}
+        {selectedContentType !== 'travel' && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            className="text-center mb-8"
+          >
+            <button
+              onClick={generateContent}
+              disabled={loading}
+              className="px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? 'Generating...' : `Generate ${contentTypes.find(t => t.id === selectedContentType)?.label}`}
+            </button>
+          </motion.div>
+        )}
 
         {/* Generated Content */}
         {generatedContent && (
