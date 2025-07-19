@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { BookOpen, Map, Music, Download, Copy, Home, Brain, Sparkles } from 'lucide-react';
+import { BookOpen, Map, Music, Download, Copy, Home, Brain, Sparkles, Search, X, MapPin, Star, Calendar } from 'lucide-react';
+import { qlooService } from '../services/qloo';
 
 const StoryPage: React.FC = () => {
   const navigate = useNavigate();
@@ -15,6 +16,16 @@ const StoryPage: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [contentCache, setContentCache] = useState<{[key: string]: string}>({});
+  
+  // Travel plan specific states
+  const [recommendedDestinations, setRecommendedDestinations] = useState<any[]>([]);
+  const [searchDestinationInput, setSearchDestinationInput] = useState('');
+  const [searchDestinationResults, setSearchDestinationResults] = useState<any[]>([]);
+  const [selectedTravelDestination, setSelectedTravelDestination] = useState<any | null>(null);
+  const [numberOfDays, setNumberOfDays] = useState(5);
+  const [loadingRecommendations, setLoadingRecommendations] = useState(false);
+  const [searchingDestinations, setSearchingDestinations] = useState(false);
+  const [showDestinationSuggestions, setShowDestinationSuggestions] = useState(false);
 
   useEffect(() => {
     // Load content from cache when switching content types
@@ -55,6 +66,53 @@ const StoryPage: React.FC = () => {
   useEffect(() => {
     checkPersonaData();
   }, []);
+  
+  // Fetch recommended destinations when travel plan is selected
+  useEffect(() => {
+    if (selectedContentType === 'travel' && hasPersonaData && selectedEntities.length > 0) {
+      fetchRecommendedDestinations();
+    }
+  }, [selectedContentType, hasPersonaData, selectedEntities]);
+  
+  const fetchRecommendedDestinations = async () => {
+    setLoadingRecommendations(true);
+    try {
+      const entityIds = selectedEntities.map(entity => entity.entity_id);
+      const destinations = await qlooService.getRecommendedDestinations(entityIds);
+      setRecommendedDestinations(destinations);
+    } catch (error) {
+      console.error('Error fetching recommended destinations:', error);
+    } finally {
+      setLoadingRecommendations(false);
+    }
+  };
+  
+  const handleDestinationSearch = async (query: string) => {
+    if (!query.trim()) {
+      setSearchDestinationResults([]);
+      setShowDestinationSuggestions(false);
+      return;
+    }
+
+    setSearchingDestinations(true);
+    setShowDestinationSuggestions(true);
+
+    try {
+      const results = await qlooService.searchEntities(query, 8, 'urn:entity:destination');
+      setSearchDestinationResults(results);
+    } catch (error) {
+      console.error('Error searching destinations:', error);
+    } finally {
+      setSearchingDestinations(false);
+    }
+  };
+  
+  const handleDestinationSelect = (destination: any) => {
+    setSelectedTravelDestination(destination);
+    setSearchDestinationInput('');
+    setShowDestinationSuggestions(false);
+    setSearchDestinationResults([]);
+  };
 
   const checkPersonaData = () => {
     try {
@@ -114,7 +172,20 @@ const StoryPage: React.FC = () => {
           break;
           
         case 'travel':
-          prompt = `You are a luxury travel planner. Create a detailed 5-day travel itinerary for someone who loves: ${entityNames}, and identifies with cultural tags: ${tagNames}. For each day, suggest 3 activities or experiences, with name, description, time, location, and a local tip. End each day with a surprising cultural insight. Keep it inspiring and fun to read.`;
+          const destinationName = selectedTravelDestination?.name || 'your chosen destination';
+          const destinationCountry = selectedTravelDestination?.properties?.geocode?.country_code || '';
+          const destinationRegion = selectedTravelDestination?.properties?.geocode?.admin1_region || '';
+          
+          prompt = `You are a luxury travel planner. Create a detailed ${numberOfDays}-day travel itinerary for ${destinationName}${destinationRegion ? `, ${destinationRegion}` : ''}${destinationCountry ? `, ${destinationCountry}` : ''} for someone who loves: ${entityNames}, and identifies with cultural tags: ${tagNames}. 
+
+For each day, suggest 3 activities or experiences with:
+- **Activity Name** and brief description
+- **Time**: Suggested time of day
+- **Location**: Specific area/neighborhood
+- **Cultural Connection**: How it relates to their taste profile
+- **Local Tip**: Insider advice
+
+End each day with a cultural insight about ${destinationName}. Make it inspiring, personal, and culturally rich.`;
           break;
           
         case 'playlist':
