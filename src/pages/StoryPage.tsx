@@ -460,67 +460,86 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                   <p className="text-gray-400 mt-3">Finding perfect destinations for you...</p>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {recommendedDestinations.map((destination, index) => (
                     <motion.div
                       key={destination.entity_id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="group relative bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-md rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/10"
+                      className="group relative bg-gradient-to-br from-gray-800/80 via-gray-800/60 to-gray-900/80 backdrop-blur-xl rounded-3xl overflow-hidden border border-gray-600/30 hover:border-purple-400/60 transition-all duration-500 hover:scale-[1.02] hover:shadow-2xl hover:shadow-purple-500/20 hover:-translate-y-2"
                     >
+                      {/* Animated Background Gradient */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 via-transparent to-orange-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                      
                       {/* Image Container with Overlay */}
-                      <div className="relative h-48 overflow-hidden">
+                      <div className="relative h-56 overflow-hidden">
                       {destination.properties?.image?.url && (
                         <img 
                           src={destination.properties.image.url} 
                           alt={destination.name}
-                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 group-hover:brightness-110"
                         />
                       )}
                         {!destination.properties?.image?.url && (
-                          <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-orange-500/20 flex items-center justify-center">
-                            <MapPin className="h-16 w-16 text-purple-400" />
+                          <div className="w-full h-full bg-gradient-to-br from-purple-500/30 via-pink-500/20 to-orange-500/30 flex items-center justify-center relative">
+                            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-teal-500/10 animate-pulse"></div>
+                            <MapPin className="h-20 w-20 text-purple-300 relative z-10 drop-shadow-lg" />
                           </div>
                         )}
                         
                         {/* Gradient Overlay */}
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent"></div>
+                        
+                        {/* Subtle Shine Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000 ease-out"></div>
                         
                         {/* Match Score Badge */}
                         <div className="absolute top-3 right-3">
-                          <div className="flex items-center gap-1 px-3 py-1 bg-green-500/90 backdrop-blur-sm rounded-full">
-                            <div className="w-2 h-2 bg-white rounded-full"></div>
-                            <span className="text-white text-sm font-bold">
+                          <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 + 0.3 }}
+                            className="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-green-500/95 to-emerald-500/95 backdrop-blur-md rounded-full border border-green-400/30 shadow-lg"
+                          >
+                            <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                            <span className="text-white text-sm font-bold drop-shadow-sm">
                               {Math.round((destination.query?.affinity || 0.8) * 100)}%
                             </span>
-                          </div>
+                          </motion.div>
                         </div>
                         
                         {/* Popularity Badge */}
                         <div className="absolute top-3 left-3">
-                          <div className="flex items-center gap-1 px-3 py-1 bg-yellow-500/90 backdrop-blur-sm rounded-full">
-                            <Star className="h-3 w-3 text-white" />
-                            <span className="text-white text-sm font-bold">
+                          <motion.div 
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: 0.5, delay: index * 0.1 + 0.2 }}
+                            className="flex items-center gap-1 px-3 py-2 bg-gradient-to-r from-yellow-500/95 to-amber-500/95 backdrop-blur-md rounded-full border border-yellow-400/30 shadow-lg"
+                          >
+                            <Star className="h-3 w-3 text-white drop-shadow-sm" />
+                            <span className="text-white text-sm font-bold drop-shadow-sm">
                               {Math.round((destination.popularity || 0.8) * 100)}
                             </span>
-                          </div>
+                          </motion.div>
                         </div>
                       </div>
                       
                       {/* Content */}
-                      <div className="p-6">
+                      <div className="p-6 relative z-10">
                         {/* Title and Location */}
                         <div className="mb-4">
-                          <h4 className="text-xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors duration-200">
+                          <h4 className="text-2xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-purple-300 group-hover:to-pink-300 group-hover:bg-clip-text transition-all duration-300 leading-tight">
                             {destination.name}
                           </h4>
                           
                           {/* Location Info */}
                           {destination.properties?.geocode && (
-                            <div className="flex items-center gap-2 mb-2">
-                              <MapPin className="h-4 w-4 text-blue-400" />
-                              <span className="text-blue-300 text-sm font-medium">
+                            <div className="flex items-center gap-2 mb-3">
+                              <div className="p-1 bg-blue-500/20 rounded-full">
+                                <MapPin className="h-4 w-4 text-blue-400" />
+                              </div>
+                              <span className="text-blue-300 text-sm font-semibold tracking-wide">
                                 {destination.properties.geocode.admin1_region && 
                                  destination.properties.geocode.country_code && 
                                  `${destination.properties.geocode.admin1_region}, ${destination.properties.geocode.country_code}`}
@@ -530,28 +549,34 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                           
                           {/* Coordinates */}
                           {destination.location && (
-                            <div className="text-gray-400 text-xs flex items-center gap-1">
-                              <span>📍</span>
-                              <span>{destination.location.lat.toFixed(2)}°, {destination.location.lon.toFixed(2)}°</span>
+                            <div className="text-gray-400 text-xs flex items-center gap-2 bg-gray-700/30 px-3 py-1 rounded-full">
+                              <span className="text-sm">🌍</span>
+                              <span className="font-mono">{destination.location.lat.toFixed(2)}°, {destination.location.lon.toFixed(2)}°</span>
                             </div>
                           )}
                         </div>
                         
                         {/* Cultural Tags */}
                         {destination.tags && destination.tags.length > 0 && (
-                          <div className="mb-4">
-                            <div className="text-gray-400 text-xs mb-2 font-medium">Cultural Vibes</div>
-                            <div className="flex flex-wrap gap-1">
+                          <div className="mb-6">
+                            <div className="text-gray-400 text-xs mb-3 font-semibold uppercase tracking-wider flex items-center gap-2">
+                              <span className="w-2 h-2 bg-gradient-to-r from-purple-400 to-pink-400 rounded-full"></span>
+                              Cultural Vibes
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                               {destination.tags.slice(0, 4).map((tag, tagIndex) => (
-                                <span 
+                                <motion.span 
                                   key={tag.tag_id || tagIndex}
-                                  className="px-2 py-1 bg-gradient-to-r from-orange-500/20 to-pink-500/20 text-orange-300 text-xs rounded-full border border-orange-400/30 font-medium"
+                                  initial={{ opacity: 0, scale: 0.8 }}
+                                  animate={{ opacity: 1, scale: 1 }}
+                                  transition={{ duration: 0.3, delay: index * 0.1 + tagIndex * 0.05 }}
+                                  className="px-3 py-1.5 bg-gradient-to-r from-orange-500/25 to-pink-500/25 text-orange-200 text-xs rounded-full border border-orange-400/40 font-medium hover:from-orange-500/35 hover:to-pink-500/35 transition-all duration-200 cursor-default backdrop-blur-sm"
                                 >
                                   {tag.name}
-                                </span>
+                                </motion.span>
                               ))}
                               {destination.tags.length > 4 && (
-                                <span className="text-gray-400 text-xs px-2 py-1">
+                                <span className="text-gray-400 text-xs px-3 py-1.5 bg-gray-600/30 rounded-full border border-gray-500/30">
                                   +{destination.tags.length - 4}
                                 </span>
                               )}
@@ -560,15 +585,18 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                         )}
                         
                         {/* Action Buttons */}
-                        <div className="flex gap-2">
+                        <div className="flex gap-3">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDestinationSelect(destination);
                             }}
-                            className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
+                            className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-600 hover:via-purple-700 hover:to-pink-600 text-white font-bold rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-105 active:scale-95 relative overflow-hidden group/btn"
                           >
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                            <span className="relative z-10">
                             Select Destination
+                            </span>
                           </button>
                           
                           {destination.location && (
@@ -579,11 +607,12 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&zoom=12`;
                                 window.open(mapUrl, '_blank');
                               }}
-                              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 flex items-center gap-2"
+                              className="px-5 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105 active:scale-95 flex items-center gap-2 relative overflow-hidden group/btn"
                               title="View on Google Maps"
                             >
-                              <MapPin className="h-4 w-4" />
-                              Map
+                              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                              <MapPin className="h-4 w-4 relative z-10" />
+                              <span className="relative z-10">Map</span>
                             </button>
                           )}
                         </div>
