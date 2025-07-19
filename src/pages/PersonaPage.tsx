@@ -673,9 +673,14 @@ Discover more at: https://tastebridge.app
               disabled={!culturalIdentity}
               className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-    <div className="pt-16 min-h-screen bg-gray-900">
+              {shareSuccess ? <Check className="h-5 w-5 text-green-400" /> : <Share2 className="h-5 w-5" />}
               {shareSuccess ? 'Copied!' : 'Share My Cultural DNA'}
             </button>
+          </motion.div>
+        </div>
+      </div>
+
+      <div className="relative">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
@@ -1209,7 +1214,7 @@ Discover more at: https://tastebridge.app
             ) : (
               <motion.div
                 initial={{ opacity: 0 }}
-            <div className="inline-flex items-center px-8 py-4 bg-gray-800/50 backdrop-blur-md rounded-xl border border-gray-700">
+                animate={{ opacity: 1 }}
                 transition={{ duration: 0.5 }}
                 className="prose prose-lg max-w-none"
               >
@@ -1221,13 +1226,13 @@ Discover more at: https://tastebridge.app
                       transition={{ duration: 0.5, repeat: Infinity }}
                       className="inline-block w-0.5 h-6 bg-purple-500 ml-1"
                     />
-            className="bg-red-500/10 border border-red-400/30 rounded-xl p-8 text-center"
+                  )}
                 </div>
                 
                 {culturalIdentity && !loadingCulturalIdentity && (
                   <div className="flex gap-3 mt-6">
                     <button
-              className="px-6 py-3 bg-red-500/20 border border-red-400/30 rounded-lg text-red-300 hover:bg-red-500/30 transition-colors duration-200"
+                      onClick={generateCulturalIdentity}
                       className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300"
                     >
                       Regenerate
