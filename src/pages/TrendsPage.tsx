@@ -457,7 +457,6 @@ const TrendsPage: React.FC = () => {
                             <div className="text-center py-4 text-gray-400">
                               No descriptions available in {selectedLanguage.toUpperCase()}
                             </div>
-                            </div>
                           )}
                         </div>
                       </div>
