@@ -604,11 +604,11 @@ Discover more at: https://tastebridge.app
       
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900/95 backdrop-blur-md border-b border-gray-700 shadow-lg flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-          className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full"
+          className="w-16 h-16 border-4 border-white-500 border-t-transparent rounded-full"
         />
       </div>
     );
@@ -616,7 +616,7 @@ Discover more at: https://tastebridge.app
 
   if (!selectedEntities || selectedEntities.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-900/95 backdrop-blur-md border-b border-gray-700 shadow-lg flex items-center justify-center">
         <div className="text-center bg-white/90 backdrop-blur-md rounded-3xl p-12 shadow-2xl">
           <h2 className="text-3xl font-bold text-white mb-4">No persona data found</h2>
           <p className="text-gray-600 mb-8">Please start by building your persona on the homepage.</p>
