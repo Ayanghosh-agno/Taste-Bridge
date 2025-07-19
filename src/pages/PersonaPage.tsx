@@ -217,12 +217,6 @@ const PersonaPage: React.FC = () => {
     } catch (error) {
       console.error('Error searching entities:', error);
     } finally {
-      
-      // Add selected audiences to the insights request
-      selectedAudiences.forEach(audience => {
-        params.append('signal.demographics.audiences', audience.id);
-      });
-      
       setSearching(false);
     }
   };
@@ -869,7 +863,6 @@ const PersonaPage: React.FC = () => {
                 that align with your cultural profile. These will be used to personalize your content recommendations.
               </p>
               <div className="flex gap-3">
-                <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300">
                 <button 
                   onClick={async () => {
                     if (analysisData?.tags) {
