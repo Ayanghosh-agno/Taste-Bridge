@@ -139,6 +139,91 @@ const StoryPage: React.FC = () => {
     document.body.removeChild(element);
   };
 
+  const formatContent = (content: string) => {
+    if (!content) return null;
+    
+    // Split content into lines
+    const lines = content.split('\n');
+    const formattedElements: JSX.Element[] = [];
+    
+    lines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      
+      if (!trimmedLine) {
+        // Empty line - add spacing
+        formattedElements.push(<div key={index} className="h-4" />);
+      } else if (trimmedLine.startsWith('## ')) {
+        // Main heading
+        formattedElements.push(
+          <h2 key={index} className="text-2xl font-bold text-white mb-4 mt-6 first:mt-0">
+            {trimmedLine.replace('## ', '')}
+          </h2>
+        );
+      } else if (trimmedLine.startsWith('**') && trimmedLine.endsWith('**')) {
+        // Bold section headers (like song numbers)
+        formattedElements.push(
+          <h3 key={index} className="text-lg font-semibold text-purple-300 mb-2 mt-4">
+            {trimmedLine.replace(/\*\*/g, '')}
+          </h3>
+        );
+      } else if (trimmedLine.includes('**') && trimmedLine.includes(':')) {
+        // Song details with bold labels
+        const parts = trimmedLine.split('**');
+        const formattedParts: (string | JSX.Element)[] = [];
+        
+        parts.forEach((part, partIndex) => {
+          if (partIndex % 2 === 1) {
+            // This is a bold part
+            formattedParts.push(
+              <span key={partIndex} className="font-semibold text-orange-300">
+                {part}
+              </span>
+            );
+          } else {
+            formattedParts.push(part);
+          }
+        });
+        
+        formattedElements.push(
+          <div key={index} className="mb-2 pl-4 border-l-2 border-gray-600">
+            {formattedParts}
+          </div>
+        );
+      } else if (trimmedLine.startsWith('**') || trimmedLine.includes('**')) {
+        // Other bold text
+        const parts = trimmedLine.split('**');
+        const formattedParts: (string | JSX.Element)[] = [];
+        
+        parts.forEach((part, partIndex) => {
+          if (partIndex % 2 === 1) {
+            formattedParts.push(
+              <span key={partIndex} className="font-semibold text-yellow-300">
+                {part}
+              </span>
+            );
+          } else {
+            formattedParts.push(part);
+          }
+        });
+        
+        formattedElements.push(
+          <p key={index} className="mb-3 leading-relaxed">
+            {formattedParts}
+          </p>
+        );
+      } else {
+        // Regular paragraph
+        formattedElements.push(
+          <p key={index} className="mb-3 leading-relaxed text-gray-300">
+            {trimmedLine}
+          </p>
+        );
+      }
+    });
+    
+    return <div>{formattedElements}</div>;
+  };
+
   // If no persona data, show the message
   if (!hasPersonaData) {
     return (
@@ -293,10 +378,10 @@ const StoryPage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 1, delay: 0.2 }}
-              className="prose prose-invert max-w-none"
+              className="prose prose-invert prose-lg max-w-none"
             >
-              <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
-                {generatedContent}
+              <div className="text-gray-300 leading-relaxed">
+                {formatContent(generatedContent)}
               </div>
             </motion.div>
           </motion.div>
