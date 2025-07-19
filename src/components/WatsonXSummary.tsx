@@ -6,7 +6,7 @@ interface WatsonXSummaryProps {
   personaData: any;
 }
 
-const WatsonXSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
+const GemmaSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
   const [summary, setSummary] = useState('');
   const [typing, setTyping] = useState(false);
 
@@ -19,7 +19,7 @@ const WatsonXSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
   const generateSummary = async () => {
     setTyping(true);
     
-    // Mock WatsonX response with typing effect
+    // Mock Google Gemma response with typing effect
     const mockSummary = `You are a nostalgic explorer drawn to ${personaData.tags.slice(0, 3).join(', ')} experiences. Your cultural DNA reveals a sophisticated palate for contemporary art and innovative expression, with strong connections to urban creativity and authentic craftsmanship. You gravitate toward experiences that blend traditional elements with modern innovation, suggesting a personality that values both heritage and progress. Your taste profile indicates someone who seeks depth over surface-level entertainment, preferring quality and meaning in cultural consumption.`;
     
     // Simulate typing effect
@@ -79,12 +79,10 @@ const WatsonXSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
           className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-400/20 rounded-xl"
         >
           <p className="text-purple-300 text-sm font-medium">
-            ✨ This analysis was generated using IBM WatsonX AI based on your cultural preferences and taste patterns.
+            ✨ This analysis was generated using Google Gemma AI based on your cultural preferences and taste patterns.
           </p>
         </motion.div>
       )}
     </div>
   );
 };
-
-export default WatsonXSummary;

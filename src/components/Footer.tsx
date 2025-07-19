@@ -4,10 +4,10 @@ import { Github, ExternalLink, Brain, Database } from 'lucide-react';
 
 const Footer: React.FC = () => {
   const links = [
-    { label: 'GitHub', icon: <Github className="h-5 w-5" />, url: '#' },
+    { label: 'GitHub', icon: <Github className="h-5 w-5" />, url: 'https://github.com/Ayanghosh-agno/Taste-Bridge' },
     { label: 'Qloo API', icon: <Database className="h-5 w-5" />, url: 'https://docs.qloo.com' },
-    { label: 'IBM WatsonX', icon: <Brain className="h-5 w-5" />, url: 'https://www.ibm.com/watsonx' },
-    { label: 'Devpost', icon: <ExternalLink className="h-5 w-5" />, url: '#' },
+    { label: 'Google Gemma', icon: <Brain className="h-5 w-5" />, url: 'https://api.together.ai/' },
+    { label: 'Devpost', icon: <ExternalLink className="h-5 w-5" />, url: 'https://qloo-hackathon.devpost.com/' },
   ];
 
   return (
@@ -30,7 +30,7 @@ const Footer: React.FC = () => {
           </div>
           
           <p className="text-gray-400 mb-8 max-w-2xl mx-auto">
-            Bridging cultures through AI-powered taste discovery. Built with Qloo APIs and IBM WatsonX AI.
+            Bridging cultures through AI-powered taste discovery. Built with Qloo APIs and Google Gemma AI.
           </p>
           
           <div className="flex justify-center gap-6 mb-8">
