@@ -149,7 +149,6 @@ const HomePage: React.FC = () => {
     { name: 'Gaming', icon: '🎮', color: 'from-purple-500 to-pink-500' }
   ];
 
-  const [selectedCategories, setSelectedCategories] = useState<string[]>(['Entertainment', 'Music']);
   const [viewMode, setViewMode] = useState<'categories' | 'types'>('categories');
 
   const toggleCategory = (categoryName: string) => {
