@@ -479,16 +479,66 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                       )}
                       <div className="p-4">
                         <h4 className="text-white font-semibold mb-2">{destination.name}</h4>
+                        
+                        {/* Location Info */}
+                        {destination.properties?.geocode && (
+                          <div className="mb-3">
+                            <div className="flex items-center gap-1 mb-1">
+                              <MapPin className="h-3 w-3 text-blue-400" />
+                              <span className="text-blue-300 text-xs">
+                                {destination.properties.geocode.admin1_region && 
+                                 destination.properties.geocode.country_code && 
+                                 `${destination.properties.geocode.admin1_region}, ${destination.properties.geocode.country_code}`}
+                              </span>
+                            </div>
+                            {destination.location && (
+                              <div className="text-gray-400 text-xs">
+                                📍 {destination.location.lat.toFixed(2)}°, {destination.location.lon.toFixed(2)}°
+                              </div>
+                            )}
+                          </div>
+                        )}
+                        
+                        {/* Tags */}
+                        {destination.tags && destination.tags.length > 0 && (
+                          <div className="mb-3">
+                            <div className="flex flex-wrap gap-1">
+                              {destination.tags.slice(0, 3).map((tag, tagIndex) => (
+                                <span 
+                                  key={tag.tag_id || tagIndex}
+                                  className="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs rounded-full border border-orange-400/30"
+                                >
+                                  {tag.name}
+                                </span>
+                              ))}
+                              {destination.tags.length > 3 && (
+                                <span className="text-gray-400 text-xs">
+                                  +{destination.tags.length - 3} more
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
                         <div className="flex items-center justify-between">
+                          {/* Popularity */}
                           <div className="flex items-center gap-1">
-                            <Star className="h-4 w-4 text-yellow-400" />
-                            <span className="text-gray-400 text-sm">
+                            <div className="flex items-center gap-1">
+                              <Star className="h-4 w-4 text-yellow-400" />
+                              <span className="text-gray-400 text-sm">
+                                {Math.round((destination.popularity || 0.8) * 100)}%
+                              </span>
+                            </div>
+                            <span className="text-gray-500 text-xs">popular</span>
+                          </div>
+                          
+                          {/* Match Score */}
+                          <div className="flex items-center gap-1">
+                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                            <span className="text-green-400 text-sm font-medium">
                               {Math.round((destination.query?.affinity || 0.8) * 100)}% match
                             </span>
                           </div>
-                          <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
-                            {destination.properties?.geocode?.country_code || 'Destination'}
-                          </span>
                         </div>
                       </div>
                       <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
