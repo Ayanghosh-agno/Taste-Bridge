@@ -14,11 +14,35 @@ const StoryPage: React.FC = () => {
   const [selectedContentType, setSelectedContentType] = useState('story');
   const [generatedContent, setGeneratedContent] = useState('');
   const [loading, setLoading] = useState(false);
+  const [contentCache, setContentCache] = useState<{[key: string]: string}>({});
 
-  // Clear generated content when content type changes
   useEffect(() => {
-    setGeneratedContent('');
+    // Load content from cache when switching content types
+    const cachedContent = contentCache[selectedContentType] || '';
+    setGeneratedContent(cachedContent);
   }, [selectedContentType]);
+
+  // Load cached content from localStorage on component mount
+  useEffect(() => {
+    const savedContent = localStorage.getItem('generatedContent');
+    if (savedContent) {
+      try {
+        const parsedContent = JSON.parse(savedContent);
+        setContentCache(parsedContent);
+        // Set initial content for the current type
+        setGeneratedContent(parsedContent[selectedContentType] || '');
+      } catch (error) {
+        console.error('Error parsing saved content:', error);
+      }
+    }
+  }, []);
+
+  // Save content to localStorage whenever cache changes
+  useEffect(() => {
+    if (Object.keys(contentCache).length > 0) {
+      localStorage.setItem('generatedContent', JSON.stringify(contentCache));
+    }
+  }, [contentCache]);
 
   const contentTypes = [
     { id: 'story', label: 'Cultural Story', icon: <BookOpen className="h-5 w-5" />, title: 'Your Cultural Identity' },
@@ -121,6 +145,13 @@ const StoryPage: React.FC = () => {
       const content = data.choices?.[0]?.message?.content || 'Sorry, there was an error generating your content. Please try again.';
       
       setGeneratedContent(content);
+      
+      // Update cache with new content
+      const updatedCache = {
+        ...contentCache,
+        [selectedContentType]: content
+      };
+      setContentCache(updatedCache);
     } catch (error) {
       console.error('Error generating content:', error);
       setGeneratedContent('Sorry, there was an error generating your content. Please try again.');
