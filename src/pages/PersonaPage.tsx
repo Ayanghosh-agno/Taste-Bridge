@@ -217,6 +217,12 @@ const PersonaPage: React.FC = () => {
     } catch (error) {
       console.error('Error searching entities:', error);
     } finally {
+      
+      // Add selected audiences to the insights request
+      selectedAudiences.forEach(audience => {
+        params.append('signal.demographics.audiences', audience.id);
+      });
+      
       setSearching(false);
     }
   };
@@ -502,7 +508,7 @@ const PersonaPage: React.FC = () => {
             
             {/* Search Suggestions */}
             {showSuggestions && (searchResults.length > 0 || searching) && (
-              <div className="absolute z-50 w-full mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-80 overflow-y-auto">
+              <div className="absolute z-50 w-full max-w-2xl mt-2 bg-white/95 backdrop-blur-md border border-gray-200 rounded-2xl shadow-2xl max-h-80 overflow-y-auto">
                 {searching ? (
                   <div className="p-6 text-center">
                     <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto"></div>

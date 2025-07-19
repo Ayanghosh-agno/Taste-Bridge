@@ -12,6 +12,7 @@ const HomePage: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [selectedEntityTypes, setSelectedEntityTypes] = useState<string[]>(['urn:entity:artist', 'urn:entity:movie']);
+  const [selectedEntityTypes, setSelectedEntityTypes] = useState<string[]>([]);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const navigate = useNavigate();
 
@@ -150,6 +151,7 @@ const HomePage: React.FC = () => {
   ];
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['Entertainment', 'Music']);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'categories' | 'types'>('categories');
 
   const toggleCategory = (categoryName: string) => {
