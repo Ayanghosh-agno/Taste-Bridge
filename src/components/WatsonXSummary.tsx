@@ -86,3 +86,5 @@ const GemmaSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
     </div>
   );
 };
+
+export default GemmaSummary;
