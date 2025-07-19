@@ -1,364 +1,973 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, Calendar, Filter, BarChart3, Star, Eye, ArrowUp, ArrowDown, Minus } from 'lucide-react';
+import { TrendingUp, Music, Utensils, Film, Palette, MapPin, Star, ExternalLink, Calendar, Users, User, Award, BarChart3, ChevronDown, ChevronUp, X, RefreshCw } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import TrendChart from '../components/TrendChart';
 
 const TrendsPage: React.FC = () => {
-  const [selectedCategory, setSelectedCategory] = useState('urn:entity:artist');
+  const [activeCategory, setActiveCategory] = useState('actor');
+  const [trendsData, setTrendsData] = useState<any>(null);
+  const [expandedPlatforms, setExpandedPlatforms] = useState<Set<string>>(new Set());
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
-  const [trendData, setTrendData] = useState<any[]>([]);
-  const [chartData, setChartData] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [chartLoading, setChartLoading] = useState(false);
+  const [entityTrendData, setEntityTrendData] = useState<any>(null);
+  const [loadingEntityTrend, setLoadingEntityTrend] = useState(false);
+  const [showTrendModal, setShowTrendModal] = useState(false);
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
+  const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
+
+  // Language code to full name mapping
+  const getLanguageFullName = (code: string) => {
+    const languageMap: Record<string, string> = {
+      'en': 'English',
+      'es': 'Spanish',
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'ru': 'Russian',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'zh': 'Chinese',
+      'ar': 'Arabic',
+      'hi': 'Hindi',
+      'th': 'Thai',
+      'vi': 'Vietnamese',
+      'nl': 'Dutch',
+      'sv': 'Swedish',
+      'no': 'Norwegian',
+      'da': 'Danish',
+      'fi': 'Finnish',
+      'pl': 'Polish',
+      'cs': 'Czech',
+      'hu': 'Hungarian',
+      'ro': 'Romanian',
+      'bg': 'Bulgarian',
+      'hr': 'Croatian',
+      'sk': 'Slovak',
+      'sl': 'Slovenian',
+      'et': 'Estonian',
+      'lv': 'Latvian',
+      'lt': 'Lithuanian',
+      'mt': 'Maltese',
+      'ga': 'Irish',
+      'cy': 'Welsh',
+      'eu': 'Basque',
+      'ca': 'Catalan',
+      'gl': 'Galician',
+      'tr': 'Turkish',
+      'he': 'Hebrew',
+      'fa': 'Persian',
+      'ur': 'Urdu',
+      'bn': 'Bengali',
+      'ta': 'Tamil',
+      'te': 'Telugu',
+      'ml': 'Malayalam',
+      'kn': 'Kannada',
+      'gu': 'Gujarati',
+      'pa': 'Punjabi',
+      'mr': 'Marathi',
+      'ne': 'Nepali',
+      'si': 'Sinhala',
+      'my': 'Burmese',
+      'km': 'Khmer',
+      'lo': 'Lao',
+      'ka': 'Georgian',
+      'am': 'Amharic',
+      'sw': 'Swahili',
+      'zu': 'Zulu',
+      'af': 'Afrikaans',
+      'is': 'Icelandic',
+      'fo': 'Faroese',
+      'mk': 'Macedonian',
+      'sq': 'Albanian',
+      'sr': 'Serbian',
+      'bs': 'Bosnian',
+      'me': 'Montenegrin'
+    };
+    
+    return languageMap[code.toLowerCase()] || code.toUpperCase();
+  };
+
+  // Initialize dates
+  useEffect(() => {
+    const today = new Date();
+    const weekAgo = new Date();
+    weekAgo.setDate(today.getDate() - 7);
+    
+    setEndDate(today.toISOString().split('T')[0]);
+    setStartDate(weekAgo.toISOString().split('T')[0]);
+  }, []);
 
   const categories = [
-    { id: 'urn:entity:artist', name: 'Artists', icon: '🎤', color: 'from-purple-500 to-pink-500' },
-    { id: 'urn:entity:movie', name: 'Movies', icon: '🎬', color: 'from-red-500 to-orange-500' },
-    { id: 'urn:entity:tv_show', name: 'TV Shows', icon: '📺', color: 'from-blue-500 to-cyan-500' },
-    { id: 'urn:entity:book', name: 'Books', icon: '📚', color: 'from-green-500 to-teal-500' },
-    { id: 'urn:entity:album', name: 'Albums', icon: '💿', color: 'from-indigo-500 to-purple-500' },
-    { id: 'urn:entity:place', name: 'Places', icon: '📍', color: 'from-emerald-500 to-green-500' },
+    { id: 'actor', label: 'Actors', icon: <Users className="h-5 w-5" /> },
+    { id: 'brand', label: 'Brands', icon: <Palette className="h-5 w-5" /> },
+    { id: 'person', label: 'People', icon: <User className="h-5 w-5" /> },
+    { id: 'artist', label: 'Artists', icon: <Music className="h-5 w-5" /> },
+    { id: 'podcast', label: 'Podcasts', icon: <MapPin className="h-5 w-5" /> },
+    { id: 'movie', label: 'Movies', icon: <Film className="h-5 w-5" /> },
+    { id: 'tv_show', label: 'TV Shows', icon: <Utensils className="h-5 w-5" /> },
   ];
 
   useEffect(() => {
-    loadTrends();
-  }, [selectedCategory]);
+    fetchTrends(activeCategory);
+  }, [activeCategory]);
 
-  const loadTrends = async () => {
-    setLoading(true);
+  const fetchTrends = async (category: string) => {
     try {
-      const trends = await qlooService.getTrendsByCategory(selectedCategory);
-      console.log('Loaded trends:', trends);
+      // Fetch real trends data from Qloo API
+      const trendsData = await qlooService.getTrendsByCategory(category);
+      const tags = await qlooService.getTags();
       
-      // Transform the data to include trend indicators
-      const transformedTrends = trends.map((entity: any) => ({
-        ...entity,
-        change: entity.query?.rank_delta || (Math.random() - 0.5) * 20,
-        trend: entity.query?.rank_delta > 0 ? 'up' : entity.query?.rank_delta < 0 ? 'down' : 'stable',
-        popularity: entity.popularity || Math.random(),
-        rank: entity.query?.rank || Math.floor(Math.random() * 100) + 1
-      }));
+      const processedData = {
+        trending: trendsData.length > 0 ? trendsData : [],
+        tags: tags.length > 0 ? [...new Set(tags.map((tag: any) => tag.name || tag.id))].slice(0, 12) : [
+          'experimental', 'atmospheric', 'nostalgic', 'dreamy', 'melancholic',
+          'introspective', 'ethereal', 'minimalist', 'organic', 'intimate', 'contemporary', 'artisanal'
+        ],
+        chartData: Array.from({ length: 7 }, (_, i) => ({
+          day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+          value: Math.floor(Math.random() * 100) + 50
+        }))
+      };
       
-      setTrendData(transformedTrends);
+      setTrendsData(processedData);
     } catch (error) {
-      console.error('Error loading trends:', error);
-      // Fallback to mock data
-      setTrendData([
-        {
-          name: 'Taylor Swift',
-          entity_id: 'taylor-swift',
-          type: 'urn:entity:artist',
-          properties: { image: { url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg' } },
-          change: 15.2,
-          trend: 'up',
-          popularity: 0.95,
-          rank: 1
-        },
-        {
-          name: 'The Weeknd',
-          entity_id: 'the-weeknd',
-          type: 'urn:entity:artist',
-          properties: { image: { url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg' } },
-          change: -3.1,
-          trend: 'down',
-          popularity: 0.88,
-          rank: 5
-        }
-      ]);
-    } finally {
-      setLoading(false);
+      console.error('Error fetching trends:', error);
+      const fallbackData = {
+        trending: [],
+        tags: [
+          'experimental', 'atmospheric', 'nostalgic', 'dreamy', 'melancholic',
+          'introspective', 'ethereal', 'minimalist', 'organic', 'intimate'
+        ],
+        chartData: Array.from({ length: 7 }, (_, i) => ({
+          day: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'][i],
+          value: Math.floor(Math.random() * 100) + 50
+        }))
+      };
+      
+      setTrendsData(fallbackData);
     }
   };
 
-  const loadEntityTrend = async (entity: any) => {
+  const togglePlatforms = (entityId: string) => {
+    setExpandedPlatforms(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(entityId)) {
+        newSet.delete(entityId);
+      } else {
+        newSet.add(entityId);
+      }
+      return newSet;
+    });
+  };
+
+  const handleEntityClick = async (entity: any) => {
     setSelectedEntity(entity);
-    setChartLoading(true);
+    setShowTrendModal(true);
+    setSelectedLanguage('all'); // Reset language selection when opening modal
+    await fetchEntityTrend(entity);
+  };
+
+  // Get available languages from entity data
+  const getAvailableLanguages = (entity: any) => {
+    const languages = new Set<string>();
     
+    // Get languages from AKAs
+    if (entity.properties?.akas) {
+      entity.properties.akas.forEach((aka: any) => {
+        if (aka.languages && Array.isArray(aka.languages)) {
+          aka.languages.forEach((lang: string) => languages.add(lang));
+        }
+      });
+    }
+    
+    // Get languages from descriptions
+    if (entity.properties?.short_descriptions) {
+      entity.properties.short_descriptions.forEach((desc: any) => {
+        if (desc.languages && Array.isArray(desc.languages)) {
+          desc.languages.forEach((lang: string) => languages.add(lang));
+        }
+      });
+    }
+    
+    return Array.from(languages).sort();
+  };
+
+  // Filter content by selected language
+  const filterByLanguage = (items: any[], selectedLang: string) => {
+    if (selectedLang === 'all') return items;
+    
+    return items.filter((item: any) => {
+      if (!item.languages || !Array.isArray(item.languages)) return false;
+      return item.languages.includes(selectedLang);
+    });
+  };
+  const fetchEntityTrend = async (entity: any) => {
+    if (!entity || !startDate || !endDate) return;
+    
+    setLoadingEntityTrend(true);
     try {
-      // Get last 7 days
-      const endDate = new Date();
-      const startDate = new Date();
-      startDate.setDate(endDate.getDate() - 6);
-      
-      const weeklyData = await qlooService.getEntityWeeklyTrend(
+      const trendData = await qlooService.getEntityWeeklyTrend(
         entity.entity_id,
-        startDate.toISOString().split('T')[0],
-        endDate.toISOString().split('T')[0]
+        startDate,
+        endDate
       );
       
-      console.log('Weekly trend data:', weeklyData);
-      setChartData(weeklyData);
+      // Handle the actual API response structure
+      if (trendData && trendData.results && trendData.results.trends) {
+        const processedData = trendData.results.trends.map((trend: any) => {
+          const date = new Date(trend.date);
+          const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+          return {
+            day: `${date.getMonth() + 1}/${date.getDate()}`,
+            fullDate: trend.date,
+            dayName: dayNames[date.getDay()],
+            popularity: trend.popularity || 0,
+            rank: trend.rank || 0,
+            rankDelta: trend.rank_delta || 0,
+            populationPercentDelta: trend.population_percent_delta || 0,
+            value: Math.round((trend.popularity || 0) * 100) // Convert to 0-100 scale for chart
+          };
+        });
+        setEntityTrendData(processedData);
+      } else {
+        // Fallback to mock data if API response is unexpected
+        const days = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+        const fallbackData = Array.from({ length: days }, (_, i) => {
+          const date = new Date(startDate);
+          date.setDate(date.getDate() + i);
+          return {
+            day: `${date.getMonth() + 1}/${date.getDate()}`,
+            fullDate: date.toISOString(),
+            dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
+            popularity: Math.random(),
+            rank: Math.floor(Math.random() * 100) + 1,
+            rankDelta: Math.floor(Math.random() * 21) - 10,
+            populationPercentDelta: (Math.random() - 0.5) * 0.01,
+            value: Math.floor(Math.random() * 100) + 50
+          };
+        });
+        setEntityTrendData(fallbackData);
+      }
     } catch (error) {
-      console.error('Error loading entity trend:', error);
-      // Fallback to mock data
-      setChartData([
-        { day: 'Mon', value: 65 },
-        { day: 'Tue', value: 72 },
-        { day: 'Wed', value: 68 },
-        { day: 'Thu', value: 85 },
-        { day: 'Fri', value: 91 },
-        { day: 'Sat', value: 88 },
-        { day: 'Sun', value: 94 }
-      ]);
+      console.error('Error fetching entity trend:', error);
+      // Return mock data as fallback
+      const days = Math.ceil((new Date(endDate).getTime() - new Date(startDate).getTime()) / (1000 * 60 * 60 * 24)) + 1;
+      const fallbackData = Array.from({ length: days }, (_, i) => {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        return {
+          day: `${date.getMonth() + 1}/${date.getDate()}`,
+          fullDate: date.toISOString(),
+          dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
+          popularity: Math.random(),
+          rank: Math.floor(Math.random() * 100) + 1,
+          rankDelta: Math.floor(Math.random() * 21) - 10,
+          populationPercentDelta: (Math.random() - 0.5) * 0.01,
+          value: Math.floor(Math.random() * 100) + 50
+        };
+      });
+      setEntityTrendData(fallbackData);
     } finally {
-      setChartLoading(false);
-    }
-  };
-
-  const getTrendIcon = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return <ArrowUp className="h-4 w-4 text-green-400" />;
-      case 'down':
-        return <ArrowDown className="h-4 w-4 text-red-400" />;
-      default:
-        return <Minus className="h-4 w-4 text-gray-400" />;
-    }
-  };
-
-  const getTrendColor = (trend: string) => {
-    switch (trend) {
-      case 'up':
-        return 'text-green-400';
-      case 'down':
-        return 'text-red-400';
-      default:
-        return 'text-gray-400';
+      setLoadingEntityTrend(false);
     }
   };
 
   return (
     <div className="pt-16 min-h-screen bg-gray-900">
-      <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8 py-8 sm:py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-8 sm:mb-12"
+          className="text-center mb-12"
         >
-          <h1 className="text-3xl sm:text-4xl font-bold text-white mb-4">Cultural Trends</h1>
-          <p className="text-gray-400 text-base sm:text-lg">Discover what's trending in culture right now</p>
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-r from-purple-500/20 to-orange-500/20 blur-3xl"></div>
+            <div className="relative">
+              <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent mb-4">
+                Cultural Trends
+              </h1>
+              <p className="text-xl text-gray-300">Discover what's shaping global taste and culture</p>
+            </div>
+          </div>
         </motion.div>
 
-        {/* Category Selector */}
+        {/* Category Tabs */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
-          className="mb-8"
+          className="flex flex-wrap justify-center gap-3 mb-16"
         >
-          <div className="flex items-center mb-4 sm:mb-6">
-            <Filter className="h-5 w-5 text-purple-400 mr-2" />
-            <h3 className="text-lg sm:text-xl font-semibold text-white">Categories</h3>
-          </div>
-          
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
-            {categories.map((category, index) => (
-              <motion.button
-                key={category.id}
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3, delay: index * 0.1 }}
-                onClick={() => setSelectedCategory(category.id)}
-                className={`p-3 sm:p-4 rounded-xl border transition-all duration-200 hover:scale-105 ${
-                  selectedCategory === category.id
-                    ? 'border-purple-400 bg-purple-500/20'
-                    : 'border-gray-600 bg-gray-700/30 hover:border-gray-500'
-                }`}
-              >
-                <div className="text-center">
-                  <div className="text-2xl sm:text-3xl mb-2">{category.icon}</div>
-                  <div className={`text-xs sm:text-sm font-medium ${
-                    selectedCategory === category.id ? 'text-purple-300' : 'text-gray-300'
-                  }`}>
-                    {category.name}
-                  </div>
-                </div>
-              </motion.button>
-            ))}
-          </div>
+          {categories.map((category) => (
+            <button
+              key={category.id}
+              onClick={() => setActiveCategory(category.id)}
+              className={`group flex items-center gap-3 px-8 py-4 rounded-2xl font-semibold transition-all duration-300 ${
+                activeCategory === category.id
+                  ? 'bg-gradient-to-r from-purple-500 to-orange-500 text-white shadow-xl shadow-purple-500/30 scale-105'
+                  : 'bg-gray-800/50 backdrop-blur-md text-gray-300 hover:bg-gray-700/50 hover:scale-105 border border-gray-700'
+              }`}
+            >
+              <span className={`transition-transform duration-300 ${activeCategory === category.id ? 'scale-110' : 'group-hover:scale-110'}`}>
+                {category.icon}
+              </span>
+              <span className="text-lg">{category.label}</span>
+            </button>
+          ))}
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
-          {/* Trending List */}
-          <motion.div
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="lg:col-span-2"
-          >
-            <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-4 sm:p-8">
-              <div className="flex items-center mb-4 sm:mb-6">
-                <TrendingUp className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 mr-2 sm:mr-3" />
-                <h3 className="text-lg sm:text-2xl font-semibold text-white">Trending Now</h3>
+        {trendsData && (
+          <div>
+            {/* Trending Entities */}
+            <motion.div
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/50 mb-8"
+            >
+              <div className="flex items-center justify-between mb-8">
+                <div className="flex items-center">
+                  <div className="p-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl mr-4">
+                    <TrendingUp className="h-6 w-6 text-white" />
+                  </div>
+                  <div>
+                    <h3 className="text-3xl font-bold text-white">Trending Now</h3>
+                    <p className="text-gray-400">Most popular in {categories.find(c => c.id === activeCategory)?.label}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-2xl font-bold text-purple-400">{trendsData.trending?.length || 0}</div>
+                  <div className="text-sm text-gray-400">entities</div>
+                </div>
               </div>
               
-              {loading ? (
-                <div className="text-center py-8 sm:py-12">
-                  <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
-                  <p className="text-gray-400 mt-4">Loading trends...</p>
-                </div>
-              ) : (
-                <div className="space-y-3 sm:space-y-4">
-                  {trendData.map((item, index) => (
-                    <motion.div
-                      key={item.entity_id || index}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: index * 0.1 }}
-                      onClick={() => loadEntityTrend(item)}
-                      className="flex items-center justify-between p-3 sm:p-4 bg-gray-700/30 rounded-xl hover:bg-gray-700/50 transition-colors duration-200 cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-3 sm:gap-4 flex-1 min-w-0">
-                        <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-r from-purple-500 to-orange-500 rounded-lg text-white font-bold text-sm sm:text-base flex-shrink-0">
-                          {index + 1}
-                        </div>
-                        
-                        {item.properties?.image?.url ? (
-                          <img 
-                            src={item.properties.image.url} 
-                            alt={item.name}
-                            className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover border-2 border-gray-600 flex-shrink-0"
-                          />
-                        ) : (
-                          <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center border-2 border-gray-600 flex-shrink-0">
-                            <span className="text-white font-bold text-sm sm:text-lg">
-                              {item.name.charAt(0)}
-                            </span>
-                          </div>
-                        )}
-                        
-                        <div className="flex-1 min-w-0">
-                          <h4 className="text-white font-semibold text-sm sm:text-base truncate">{item.name}</h4>
-                          <div className="flex items-center gap-2 mt-1">
-                            <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
-                              {item.type?.replace('urn:entity:', '') || 'entity'}
-                            </span>
-                            {item.popularity && (
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3 text-yellow-400" />
-                                <span className="text-gray-400 text-xs">
-                                  {Math.round(item.popularity * 100)}%
-                                </span>
-                              </div>
-                            )}
-                          </div>
+              <div className="space-y-6">
+                {trendsData.trending && trendsData.trending.length > 0 ? trendsData.trending.map((entity: any, index: number) => (
+                  <motion.div
+                    key={entity.entity_id || index}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
+                    className="group p-6 bg-gradient-to-r from-gray-800/40 to-gray-700/40 rounded-2xl hover:from-gray-700/60 hover:to-gray-600/60 transition-all duration-300 border border-gray-600/30 hover:border-purple-400/30 hover:shadow-lg hover:shadow-purple-500/10"
+                  >
+                    {/* Header with rank, name and image */}
+                    <div className="flex items-start gap-6 mb-6">
+                      {/* Rank Badge */}
+                      <div className="flex-shrink-0">
+                        <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-orange-500 rounded-xl flex items-center justify-center">
+                          <span className="text-white font-bold text-lg">#{index + 1}</span>
                         </div>
                       </div>
                       
-                      <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
-                        {getTrendIcon(item.trend)}
-                        <span className={`font-bold text-sm sm:text-base ${getTrendColor(item.trend)}`}>
-                          {item.change > 0 ? '+' : ''}{item.change?.toFixed(1) || '0.0'}%
-                        </span>
-                        <Eye className="h-4 w-4 text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity duration-200" />
+                      {/* Image */}
+                      {entity.properties?.image?.url ? (
+                        <img 
+                          src={entity.properties.image.url} 
+                          alt={entity.name}
+                          className="w-20 h-20 rounded-xl object-cover shadow-lg border-2 border-gray-600 group-hover:border-purple-400 transition-colors duration-300"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-xl bg-gradient-to-br from-gray-600 to-gray-700 flex items-center justify-center border-2 border-gray-600">
+                          <Music className="w-8 h-8 text-gray-400" />
+                        </div>
+                      )}
+                      
+                      {/* Name and basic info */}
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-3">
+                          <h4 
+                            className="text-white font-bold text-xl hover:text-purple-300 transition-colors duration-300 cursor-pointer underline-offset-4 hover:underline"
+                            onClick={() => handleEntityClick(entity)}
+                          >
+                            {entity.name}
+                          </h4>
+                          {entity.entity_id && (
+                            <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30">
+                              ID
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2 mb-3">
+                          {entity.type && (
+                            <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-400/30 font-medium">
+                            {entity.type}
+                            </span>
+                          )}
+                          {entity.subtype && (
+                            <span className="px-3 py-1 bg-orange-500/20 text-orange-300 text-xs rounded-full border border-orange-400/30 font-medium">
+                            {entity.subtype}
+                            </span>
+                          )}
+                        </div>
+                        {entity.disambiguation && (
+                          <p className="text-gray-400 text-sm mb-3">{entity.disambiguation}</p>
+                        )}
+                        
+                        {/* Full Description */}
+                        {entity.properties?.description && (
+                          <div className="mb-4 p-3 bg-gray-800/40 rounded-lg border border-gray-600/30">
+                            <div className="flex items-center gap-2 mb-2">
+                              <BarChart3 className="h-4 w-4 text-blue-400" />
+                              <span className="text-blue-400 font-semibold text-sm">Description</span>
+                            </div>
+                            <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {entity.properties.description}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Popularity */}
+                        {entity.popularity && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Star className="h-4 w-4 text-yellow-400" />
+                            <span className="text-gray-300 font-medium">
+                              {(entity.popularity * 100).toFixed(2)}% popular
+                            </span>
+                          </div>
+                        )}
                       </div>
-                    </motion.div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Trend Chart */}
-          <motion.div
-            initial={{ opacity: 0, x: 30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-4 sm:p-8">
-              <div className="flex items-center mb-4 sm:mb-6">
-                <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-purple-400 mr-2 sm:mr-3" />
-                <h3 className="text-lg sm:text-xl font-semibold text-white">Weekly Trend</h3>
-              </div>
-              
-              {selectedEntity ? (
-                <div>
-                  <div className="flex items-center gap-3 mb-4 sm:mb-6">
-                    {selectedEntity.properties?.image?.url ? (
-                      <img 
-                        src={selectedEntity.properties.image.url} 
-                        alt={selectedEntity.name}
-                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg object-cover border-2 border-gray-600"
-                      />
-                    ) : (
-                      <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center border-2 border-gray-600">
-                        <span className="text-white font-bold text-sm sm:text-lg">
-                          {selectedEntity.name.charAt(0)}
-                        </span>
+                      
+                      {/* Quick stats */}
+                      <div className="flex-shrink-0 text-right">
+                        {entity.query && (
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1">
+                              <Award className="h-4 w-4 text-purple-400" />
+                              <span className="text-white font-bold">#{entity.query.rank}</span>
+                            </div>
+                            <div className="text-xs text-gray-400">Rank</div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Alternative Names (AKAs) */}
+                    {entity.properties?.akas && entity.properties.akas.length > 0 && (
+                      <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
+                        <div className="flex items-center gap-2 mb-4">
+                          <Users className="h-4 w-4 text-cyan-400" />
+                          <span className="text-cyan-400 font-semibold">
+                            Alternative Names ({selectedLanguage === 'all' ? entity.properties.akas.length : filterByLanguage(entity.properties.akas, selectedLanguage).length})
+                          </span>
+                        </div>
+                        
+                        {/* Language Selector */}
+                        {getAvailableLanguages(entity).length > 0 && (
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-gray-300 mb-2">Select Language:</label>
+                            <select
+                              value={selectedLanguage}
+                              onChange={(e) => setSelectedLanguage(e.target.value)}
+                              className="px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                            >
+                              <option value="all">All Languages</option>
+                              {getAvailableLanguages(entity).map((lang) => (
+                                <option key={lang} value={lang}>
+                                  {getLanguageFullName(lang)}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        )}
+                        
+                        <div className="max-h-32 overflow-y-auto">
+                          <div className="flex flex-wrap gap-2">
+                            {filterByLanguage(entity.properties.akas, selectedLanguage).map((aka: any, akaIndex: number) => (
+                              <span
+                                key={akaIndex}
+                                className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs rounded-full border border-cyan-400/30"
+                                title={`Languages: ${aka.languages ? aka.languages.map((lang: string) => getLanguageFullName(lang)).join(', ') : 'N/A'}`}
+                              >
+                                {aka.value}
+                              </span>
+                            ))}
+                          </div>
+                          {filterByLanguage(entity.properties.akas, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
+                            <div className="text-center py-4 text-gray-400">
+                              No alternative names available in {getLanguageFullName(selectedLanguage)}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     )}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="text-white font-semibold text-sm sm:text-base truncate">{selectedEntity.name}</h4>
-                      <p className="text-gray-400 text-xs sm:text-sm">7-day trend</p>
-                    </div>
-                  </div>
-                  
-                  {chartLoading ? (
-                    <div className="text-center py-8">
-                      <div className="animate-spin w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
-                      <p className="text-gray-400 mt-2 text-sm">Loading chart...</p>
-                    </div>
-                  ) : (
-                    <div className="h-48 sm:h-64">
-                      <TrendChart data={chartData} />
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="text-center py-8 sm:py-12">
-                  <Calendar className="h-12 w-12 sm:h-16 sm:w-16 text-gray-600 mx-auto mb-4" />
-                  <p className="text-gray-400 text-sm sm:text-base">Select an item to view its weekly trend</p>
-                </div>
-              )}
-            </div>
-          </motion.div>
-        </div>
 
-        {/* Trend Insights */}
-        {selectedEntity && (
+                    {/* Short Descriptions */}
+                    {entity.properties?.short_descriptions && entity.properties.short_descriptions.length > 0 && (
+                      <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
+                        <div className="flex items-center gap-2 mb-4">
+                          <BarChart3 className="h-4 w-4 text-green-400" />
+                          <span className="text-green-400 font-semibold">
+                            All Descriptions ({selectedLanguage === 'all' ? entity.properties.short_descriptions.length : filterByLanguage(entity.properties.short_descriptions, selectedLanguage).length})
+                          </span>
+                        </div>
+                        
+                        <div className="max-h-48 overflow-y-auto">
+                          <div className="flex flex-wrap gap-2">
+                            {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).map((desc: any, descIndex: number) => (
+                              <span
+                                key={descIndex}
+                                className="px-3 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-400/30"
+                                title={`Languages: ${desc.languages ? desc.languages.map((lang: string) => getLanguageFullName(lang)).join(', ') : 'N/A'}`}
+                              >
+                                  {desc.value}
+                              </span>
+                            ))}
+                          </div>
+                          {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
+                            <div className="text-center py-4 text-gray-400">
+                              No descriptions available in {getLanguageFullName(selectedLanguage)}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Birth/Origin info */}
+                    {(entity.properties?.date_of_birth || entity.properties?.place_of_birth) && (
+                      <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="h-4 w-4 text-purple-400" />
+                          <span className="text-purple-400 font-semibold">Personal Info</span>
+                        </div>
+                        <div className="space-y-1">
+                          {entity.properties.date_of_birth && (
+                          <p className="text-gray-300 text-sm">
+                            <span className="text-gray-400">Born:</span> {entity.properties.date_of_birth}
+                          </p>
+                          )}
+                          {entity.properties.place_of_birth && (
+                          <p className="text-gray-300 text-sm">
+                            <span className="text-gray-400">From:</span> {entity.properties.place_of_birth}
+                          </p>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Tags */}
+                    {entity.tags && entity.tags.length > 0 && (
+                      <div className="mb-6">
+                        <div className="flex items-center gap-2 mb-3">
+                          <Palette className="h-4 w-4 text-orange-400" />
+                          <span className="text-orange-400 font-semibold">Genres ({entity.tags.length})</span>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {entity.tags.map((tag: any, tagIndex: number) => (
+                            <span
+                              key={tag.id || tagIndex}
+                              className="px-3 py-1 bg-gradient-to-r from-purple-500/20 to-orange-500/20 text-purple-300 text-xs rounded-full border border-purple-400/30 hover:from-purple-500/30 hover:to-orange-500/30 transition-all duration-200 cursor-pointer hover:scale-105"
+                              title={`ID: ${tag.id} | Type: ${tag.type}`}
+                            >
+                              {tag.name}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Query metrics */}
+                    {entity.query && (
+                      <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
+                        <div className="flex items-center gap-2 mb-4">
+                          <BarChart3 className="h-4 w-4 text-yellow-400" />
+                          <span className="text-yellow-400 font-semibold">Performance Metrics</span>
+                        </div>
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                          <div className="text-center p-3 bg-gray-700/30 rounded">
+                            <div className="text-white font-bold text-lg">{entity.query.rank}</div>
+                            <div className="text-gray-400 text-xs">Rank</div>
+                          </div>
+                          <div className="text-center p-3 bg-gray-700/30 rounded">
+                            <div className={`font-semibold text-lg ${entity.query.rank_delta > 0 ? 'text-green-400' : entity.query.rank_delta < 0 ? 'text-red-400' : 'text-gray-400'}`}>
+                              {entity.query.rank_delta > 0 ? '↗' : entity.query.rank_delta < 0 ? '↘' : '→'} {Math.abs(entity.query.rank_delta)}
+                            </div>
+                            <div className="text-gray-400 text-xs">Rank Change</div>
+                          </div>
+                          <div className="text-center p-3 bg-gray-700/30 rounded">
+                            <div className="text-white font-bold text-lg">
+                              {(entity.query.population_percentile * 100).toFixed(2)}%
+                            </div>
+                            <div className="text-gray-400 text-xs">Pop. Percentile</div>
+                          </div>
+                          <div className="text-center p-3 bg-gray-700/30 rounded">
+                            <div className="text-white font-bold text-lg">#{entity.query.trending_rank}</div>
+                            <div className="text-gray-400 text-xs">Trending Rank</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* External links */}
+                    {entity.external && (
+                      <div className="p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
+                        <button
+                          onClick={() => togglePlatforms(entity.entity_id || `entity-${index}`)}
+                          className="w-full flex items-center justify-between p-2 hover:bg-gray-700/30 rounded-lg transition-colors duration-200"
+                        >
+                          <div className="flex items-center gap-2">
+                            <ExternalLink className="h-4 w-4 text-blue-400" />
+                            <span className="text-blue-400 font-semibold">
+                              External Platforms ({Object.values(entity.external).flat().length})
+                            </span>
+                          </div>
+                          {expandedPlatforms.has(entity.entity_id || `entity-${index}`) ? (
+                            <ChevronUp className="h-4 w-4 text-blue-400" />
+                          ) : (
+                            <ChevronDown className="h-4 w-4 text-blue-400" />
+                          )}
+                        </button>
+                        
+                        {expandedPlatforms.has(entity.entity_id || `entity-${index}`) && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: 'auto' }}
+                            exit={{ opacity: 0, height: 0 }}
+                            transition={{ duration: 0.3 }}
+                            className="mt-4"
+                          >
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {Object.entries(entity.external).map(([platform, links]: [string, any]) => (
+                                links && links.length > 0 && links.map((link: any, linkIndex: number) => (
+                                  <div
+                                    key={`${platform}-${linkIndex}`}
+                                    className="p-3 bg-gray-700/40 rounded-lg border border-gray-600/50 hover:border-blue-400/50 transition-colors duration-200"
+                                  >
+                                    <div className="flex items-center justify-between mb-3">
+                                      <div className="flex items-center gap-2">
+                                        <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30 font-medium uppercase">
+                                          {platform}
+                                        </span>
+                                        {link.verified && (
+                                          <span className="px-2 py-0.5 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-400/30">
+                                            ✓ Verified
+                                          </span>
+                                        )}
+                                      </div>
+                                      <a
+                                        href={
+                                          platform === 'spotify' ? `https://open.spotify.com/artist/${link.id}` :
+                                          platform === 'twitter' ? `https://twitter.com/${link.id}` :
+                                          platform === 'instagram' ? `https://instagram.com/${link.id}` :
+                                          platform === 'facebook' ? `https://facebook.com/${link.id}` :
+                                          platform === 'lastfm' ? `https://last.fm/music/${link.id}` :
+                                          platform === 'imdb' ? `https://imdb.com/name/${link.id}` :
+                                          '#'
+                                        }
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="p-2 bg-blue-500/20 rounded-lg text-blue-400 hover:text-blue-300 hover:bg-blue-500/30 transition-all duration-200"
+                                      >
+                                        <ExternalLink className="h-4 w-4" />
+                                      </a>
+                                    </div>
+                                    
+                                    <div className="text-gray-300 text-sm mb-3 font-medium">@{link.id}</div>
+                                    
+                                    {/* Platform-specific metrics */}
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                      {link.followers && (
+                                        <div className="text-center p-2 bg-gray-800/60 rounded">
+                                          <div className="text-white font-bold">
+                                            {link.followers > 1000000 
+                                              ? `${(link.followers / 1000000).toFixed(1)}M`
+                                              : link.followers > 1000
+                                              ? `${(link.followers / 1000).toFixed(1)}K`
+                                              : link.followers}
+                                          </div>
+                                          <div className="text-gray-400">Followers</div>
+                                        </div>
+                                      )}
+                                      {link.monthly_listeners && (
+                                        <div className="text-center p-2 bg-gray-800/60 rounded">
+                                          <div className="text-white font-bold">
+                                            {link.monthly_listeners > 1000000 
+                                              ? `${(link.monthly_listeners / 1000000).toFixed(1)}M`
+                                              : link.monthly_listeners > 1000
+                                              ? `${(link.monthly_listeners / 1000).toFixed(1)}K`
+                                              : link.monthly_listeners}
+                                          </div>
+                                          <div className="text-gray-400">Monthly</div>
+                                        </div>
+                                      )}
+                                      {link.listeners && (
+                                        <div className="text-center p-2 bg-gray-800/60 rounded">
+                                          <div className="text-white font-bold">
+                                            {link.listeners > 1000000 
+                                              ? `${(link.listeners / 1000000).toFixed(1)}M`
+                                              : link.listeners > 1000
+                                              ? `${(link.listeners / 1000).toFixed(1)}K`
+                                              : link.listeners}
+                                          </div>
+                                          <div className="text-gray-400">Listeners</div>
+                                        </div>
+                                      )}
+                                      {link.scrobbles && (
+                                        <div className="text-center p-2 bg-gray-800/60 rounded">
+                                          <div className="text-white font-bold">
+                                            {link.scrobbles > 1000000000 
+                                              ? `${(link.scrobbles / 1000000000).toFixed(1)}B`
+                                              : link.scrobbles > 1000000 
+                                              ? `${(link.scrobbles / 1000000).toFixed(1)}M`
+                                              : link.scrobbles > 1000
+                                              ? `${(link.scrobbles / 1000).toFixed(1)}K`
+                                              : link.scrobbles}
+                                          </div>
+                                          <div className="text-gray-400">Scrobbles</div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))
+                              ))}
+                            </div>
+                          </motion.div>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )) : (
+                  <div className="text-center py-16">
+                    <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <TrendingUp className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-400 text-lg">No trending data available for this category</p>
+                    <p className="text-gray-500 text-sm mt-2">Try selecting a different category or check back later</p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+
+          </div>
+        )}
+
+        {/* Tag Cloud */}
+        {trendsData && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.4 }}
-            className="mt-6 sm:mt-8"
+            className="mt-8 bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/50"
           >
-            <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-4 sm:p-8">
-              <h3 className="text-lg sm:text-xl font-semibold text-white mb-4 sm:mb-6">Trend Insights</h3>
-              
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-                <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-white">#{selectedEntity.rank || 'N/A'}</div>
-                  <div className="text-gray-400 text-xs sm:text-sm">Current Rank</div>
-                </div>
-                
-                <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-xl">
-                  <div className={`text-xl sm:text-2xl font-bold ${getTrendColor(selectedEntity.trend)}`}>
-                    {selectedEntity.change > 0 ? '+' : ''}{selectedEntity.change?.toFixed(1) || '0.0'}%
-                  </div>
-                  <div className="text-gray-400 text-xs sm:text-sm">Weekly Change</div>
-                </div>
-                
-                <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-white">
-                    {Math.round((selectedEntity.popularity || 0) * 100)}%
-                  </div>
-                  <div className="text-gray-400 text-xs sm:text-sm">Popularity</div>
-                </div>
-                
-                <div className="text-center p-3 sm:p-4 bg-gray-700/30 rounded-xl">
-                  <div className="text-xl sm:text-2xl font-bold text-purple-400">
-                    {selectedEntity.trend === 'up' ? 'Rising' : selectedEntity.trend === 'down' ? 'Falling' : 'Stable'}
-                  </div>
-                  <div className="text-gray-400 text-xs sm:text-sm">Trend Status</div>
-                </div>
+            <div className="flex items-center mb-8">
+              <div className="p-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl mr-4">
+                <Palette className="h-6 w-6 text-white" />
               </div>
+              <h3 className="text-2xl font-bold text-white">Popular Tags</h3>
+            </div>
+            <div className="flex flex-wrap gap-3">
+              {trendsData.tags.map((tag: string, index: number) => (
+                <motion.span
+                  key={tag}
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: 0.5 + index * 0.05 }}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500/20 to-orange-500/20 border border-purple-400/30 rounded-2xl text-purple-300 font-semibold hover:scale-105 hover:from-purple-500/30 hover:to-orange-500/30 transition-all duration-200 cursor-pointer shadow-lg"
+                  style={{
+                    fontSize: `${0.9 + Math.random() * 0.3}rem`
+                  }}
+                >
+                  {tag}
+                </motion.span>
+              ))}
             </div>
           </motion.div>
         )}
       </div>
+
+      {/* Trend Modal */}
+      {showTrendModal && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          onClick={() => setShowTrendModal(false)}
+        >
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.9, y: 20 }}
+            className="bg-gray-800/95 backdrop-blur-xl rounded-3xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gray-700/50"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl">
+                  <BarChart3 className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">
+                    {selectedEntity?.name} - Weekly Trends
+                  </h3>
+                  <p className="text-gray-400">Analyze popularity trends over time</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowTrendModal(false)}
+                className="p-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-gray-300 hover:text-white transition-colors duration-200"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Date Controls */}
+            <div className="mb-8 p-6 bg-gray-700/30 rounded-2xl border border-gray-600/30">
+              <h4 className="text-lg font-semibold text-white mb-4">Date Range</h4>
+              <div className="grid md:grid-cols-3 gap-4 items-end">
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">Start Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full p-3 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-300 mb-2">End Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full p-3 bg-gray-600 border border-gray-500 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                </div>
+                <button
+                  onClick={() => fetchEntityTrend(selectedEntity)}
+                  disabled={loadingEntityTrend || !startDate || !endDate}
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-lg font-semibold text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loadingEntityTrend ? (
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                      className="w-5 h-5 border-2 border-white border-t-transparent rounded-full"
+                    />
+                  ) : (
+                    <RefreshCw className="h-5 w-5" />
+                  )}
+                  Update
+                </button>
+              </div>
+            </div>
+
+            {/* Chart */}
+            <div className="mb-8 bg-gray-700/30 rounded-2xl p-6 border border-gray-600/30">
+              <h4 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                <BarChart3 className="h-5 w-5 text-purple-400" />
+                Popularity Trend Over Time
+              </h4>
+              {loadingEntityTrend ? (
+                <div className="h-64 flex items-center justify-center">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                    className="w-12 h-12 border-4 border-purple-500 border-t-transparent rounded-full"
+                  />
+                </div>
+              ) : entityTrendData && entityTrendData.length > 0 ? (
+                <TrendChart data={entityTrendData} />
+              ) : (
+                <div className="h-64 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-16 h-16 bg-gray-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <BarChart3 className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-400 text-lg">No trend data available</p>
+                    <p className="text-gray-500 text-sm mt-2">Try adjusting the date range</p>
+                  </div>
+                </div>
+              )}
+            </div>
+                  
+            {/* Trend Summary */}
+            {entityTrendData && entityTrendData.length > 0 && (
+              <div className="bg-gray-700/30 rounded-2xl p-6 border border-gray-600/30">
+                <h4 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
+                  <Award className="h-5 w-5 text-yellow-400" />
+                  Current Performance Metrics
+                </h4>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                  <div className="p-4 bg-gray-800/40 rounded-xl border border-gray-600/30 text-center">
+                    <div className="text-3xl font-bold text-white mb-2">
+                      #{entityTrendData[entityTrendData.length - 1]?.rank || 'N/A'}
+                    </div>
+                    <div className="text-gray-400 text-sm">Current Rank</div>
+                  </div>
+                  <div className="p-4 bg-gray-800/40 rounded-xl border border-gray-600/30 text-center">
+                    <div className={`text-3xl font-bold mb-2 flex items-center justify-center gap-1 ${
+                      (entityTrendData[entityTrendData.length - 1]?.rankDelta || 0) > 0 
+                        ? 'text-green-400' 
+                        : (entityTrendData[entityTrendData.length - 1]?.rankDelta || 0) < 0 
+                        ? 'text-red-400' 
+                        : 'text-gray-400'
+                    }`}>
+                      {(entityTrendData[entityTrendData.length - 1]?.rankDelta || 0) > 0 ? (
+                        <>↗ +{entityTrendData[entityTrendData.length - 1]?.rankDelta}</>
+                      ) : (entityTrendData[entityTrendData.length - 1]?.rankDelta || 0) < 0 ? (
+                        <>↘ {entityTrendData[entityTrendData.length - 1]?.rankDelta}</>
+                      ) : (
+                        <>→ 0</>
+                      )}
+                    </div>
+                    <div className="text-gray-400 text-sm">Rank Change</div>
+                  </div>
+                  <div className="p-4 bg-gray-800/40 rounded-xl border border-gray-600/30 text-center">
+                    <div className="text-3xl font-bold text-white mb-2">
+                      {((entityTrendData[entityTrendData.length - 1]?.popularity || 0) * 100).toFixed(1)}%
+                    </div>
+                    <div className="text-gray-400 text-sm">Popularity Score</div>
+                  </div>
+                  <div className="p-4 bg-gray-800/40 rounded-xl border border-gray-600/30 text-center">
+                    <div className={`text-3xl font-bold mb-2 flex items-center justify-center gap-1 ${
+                      (entityTrendData[entityTrendData.length - 1]?.populationPercentDelta || 0) > 0 
+                        ? 'text-green-400' 
+                        : (entityTrendData[entityTrendData.length - 1]?.populationPercentDelta || 0) < 0 
+                        ? 'text-red-400' 
+                        : 'text-gray-400'
+                    }`}>
+                      {(entityTrendData[entityTrendData.length - 1]?.populationPercentDelta || 0) > 0 ? '+' : ''}
+                      {((entityTrendData[entityTrendData.length - 1]?.populationPercentDelta || 0) * 100).toFixed(2)}%
+                    </div>
+                    <div className="text-gray-400 text-sm">Population Change</div>
+                  </div>
+                </div>
+                
+                {/* Trend Analysis */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-orange-500/10 rounded-xl border border-purple-400/20">
+                  <h5 className="text-white font-semibold mb-2 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-purple-400" />
+                    Trend Analysis
+                  </h5>
+                  <p className="text-gray-300 text-sm">
+                    {(() => {
+                      const latestData = entityTrendData[entityTrendData.length - 1];
+                      const rankDelta = latestData?.rankDelta || 0;
+                      const popDelta = latestData?.populationPercentDelta || 0;
+                      
+                      if (rankDelta > 0 && popDelta > 0) {
+                        return `📈 ${selectedEntity?.name} is trending upward with improved ranking and growing popularity.`;
+                      } else if (rankDelta < 0 && popDelta < 0) {
+                        return `📉 ${selectedEntity?.name} is experiencing a decline in both ranking and popularity.`;
+                      } else if (rankDelta > 0) {
+                        return `⬆️ ${selectedEntity?.name} has improved in ranking despite mixed popularity signals.`;
+                      } else if (popDelta > 0) {
+                        return `📊 ${selectedEntity?.name} is gaining popularity even with ranking fluctuations.`;
+                      } else {
+                        return `➡️ ${selectedEntity?.name} shows stable performance with minimal changes.`;
+                      }
+                    })()}
+                  </p>
+                </div>
+              </div>
+            )}
+          </motion.div>
+        </motion.div>
+      )}
     </div>
   );
 };
