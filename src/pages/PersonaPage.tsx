@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Brain, TrendingUp, Globe, X, MapPin, Film, Music, BookOpen, Download, Share2, RefreshCw, ChevronLeft, ChevronRight, Search, Star, Plus } from 'lucide-react';
+import { User, Brain, TrendingUp, Globe, X, MapPin, Film, Music, BookOpen, Download, Share2, RefreshCw, ChevronLeft, ChevronRight, Search, Star, Plus, Check } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 
 const PersonaPage: React.FC = () => {
