@@ -503,7 +503,7 @@ Discover more at: https://tastebridge.app
         // List items
         formattedElements.push(
           <div key={index} className="mb-2 pl-4 border-l-2 border-purple-200">
-            <span className="text-gray-700">
+            <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-orange-400 bg-clip-text text-transparent">
               {trimmedLine.replace(/^[-*] /, '')}
             </span>
           </div>
@@ -632,55 +632,62 @@ Discover more at: https://tastebridge.app
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100">
-      {/* Header */}
-      <div className="pt-20 pb-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-12 text-center">
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="space-y-6"
+            >
+              <div className="animate-spin w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
+              <p className="text-gray-300 text-xl">Building your cultural persona...</p>
+            </motion.div>
+          </div>
             className="text-center mb-12"
           >
             <h1 className="text-5xl font-bold text-gray-800 mb-4">Your Cultural Persona</h1>
             <p className="text-xl text-gray-600">Discover the story behind your tastes</p>
-          </motion.div>
+          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+            >
+              <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-8">
+                <p className="text-red-400 text-lg mb-4">Unable to build persona</p>
+                <p className="text-gray-400 mb-6">{error}</p>
+                <button
+                  onClick={() => navigate('/')}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
+                >
+                  Return to Home
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
 
-          {/* Action Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
+        {/* No Data State */}
+        {!loading && !error && !personaData && (
+          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-12 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="space-y-6"
+            >
             transition={{ duration: 0.6, delay: 0.1 }}
-            className="flex justify-center gap-4 mb-12"
+              <p className="text-gray-400 mb-6">No cultural preferences found. Please select some entities first.</p>
           >
             <button
-              onClick={regenerateInsights}
+                className="px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
               disabled={loadingInsights}
-              className="flex items-center gap-2 px-6 py-3 bg-white/90 backdrop-blur-md rounded-xl font-semibold text-gray-700 hover:bg-white transition-all duration-300 shadow-lg hover:shadow-xl disabled:opacity-50"
+                Start Building Persona
             >
-              <RefreshCw className={`h-5 w-5 ${loadingInsights ? 'animate-spin' : ''}`} />
-              Regenerate Insights
-            </button>
-            <button
-              onClick={exportAsPDF}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
-            >
-              {exportSuccess ? <Check className="h-5 w-5 text-green-400" /> : <Download className="h-5 w-5" />}
-              {exportSuccess ? 'Exported!' : 'Export as PDF'}
-            </button>
-            <button
-              onClick={shareCulturalDNA}
-              disabled={!culturalIdentity}
-              className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {shareSuccess ? <Check className="h-5 w-5 text-green-400" /> : <Share2 className="h-5 w-5" />}
-              {shareSuccess ? 'Copied!' : 'Share My Cultural DNA'}
-            </button>
-          </motion.div>
+            </motion.div>
+          </div>
         </div>
-      </div>
+    <div className="pt-16 min-h-screen bg-gray-900">
 
-      <div className="relative">
+      <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
         <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-orange-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
       </div>
