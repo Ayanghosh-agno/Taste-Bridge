@@ -632,59 +632,6 @@ Discover more at: https://tastebridge.app
   }
 
   return (
-          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-12 text-center">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="space-y-6"
-            >
-              <div className="animate-spin w-16 h-16 border-4 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
-              <p className="text-gray-300 text-xl">Building your cultural persona...</p>
-            </motion.div>
-          </div>
-            className="text-center mb-12"
-          >
-            <h1 className="text-5xl font-bold text-gray-800 mb-4">Your Cultural Persona</h1>
-            <p className="text-xl text-gray-600">Discover the story behind your tastes</p>
-          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-center"
-            >
-              <div className="bg-red-500/10 border border-red-400/30 rounded-xl p-8">
-                <p className="text-red-400 text-lg mb-4">Unable to build persona</p>
-                <p className="text-gray-400 mb-6">{error}</p>
-                <button
-                  onClick={() => navigate('/')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
-                >
-                  Return to Home
-                </button>
-              </div>
-            </motion.div>
-          </div>
-        )}
-
-        {/* No Data State */}
-        {!loading && !error && !personaData && (
-          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-12 text-center">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="space-y-6"
-            >
-            transition={{ duration: 0.6, delay: 0.1 }}
-              <p className="text-gray-400 mb-6">No cultural preferences found. Please select some entities first.</p>
-          >
-            <button
-                className="px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
-              disabled={loadingInsights}
-                Start Building Persona
-            >
-            </motion.div>
-          </div>
-        </div>
     <div className="pt-16 min-h-screen bg-gray-900">
 
       <div className="absolute inset-0 overflow-hidden">
@@ -693,6 +640,17 @@ Discover more at: https://tastebridge.app
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-20">
+        
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="text-center mb-12"
+        >
+          <h1 className="text-5xl font-bold text-gray-800 mb-4">Your Cultural Persona</h1>
+          <p className="text-xl text-gray-600">Discover the story behind your tastes</p>
+        </motion.div>
+
         {/* 1. Selected Identity Cards */}
         <motion.section
           initial={{ opacity: 0, y: 30 }}
