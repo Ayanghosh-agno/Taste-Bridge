@@ -460,89 +460,133 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                   <p className="text-gray-400 mt-3">Finding perfect destinations for you...</p>
                 </div>
               ) : (
-                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {recommendedDestinations.map((destination, index) => (
                     <motion.div
                       key={destination.entity_id}
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
-                      className="group relative bg-gray-700/30 rounded-xl overflow-hidden hover:bg-gray-700/50 transition-all duration-200 cursor-pointer"
-                      onClick={() => handleDestinationSelect(destination)}
+                      className="group relative bg-gradient-to-br from-gray-800/60 to-gray-900/60 backdrop-blur-md rounded-2xl overflow-hidden border border-gray-700/50 hover:border-purple-400/50 transition-all duration-300 hover:scale-105 hover:shadow-2xl hover:shadow-purple-500/10"
                     >
+                      {/* Image Container with Overlay */}
+                      <div className="relative h-48 overflow-hidden">
                       {destination.properties?.image?.url && (
                         <img 
                           src={destination.properties.image.url} 
                           alt={destination.name}
-                          className="w-full h-32 object-cover"
+                            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
                         />
                       )}
-                      <div className="p-4">
-                        <h4 className="text-white font-semibold mb-2">{destination.name}</h4>
+                        {!destination.properties?.image?.url && (
+                          <div className="w-full h-full bg-gradient-to-br from-purple-500/20 to-orange-500/20 flex items-center justify-center">
+                            <MapPin className="h-16 w-16 text-purple-400" />
+                          </div>
+                        )}
                         
-                        {/* Location Info */}
-                        {destination.properties?.geocode && (
-                          <div className="mb-3">
-                            <div className="flex items-center gap-1 mb-1">
-                              <MapPin className="h-3 w-3 text-blue-400" />
-                              <span className="text-blue-300 text-xs">
+                        {/* Gradient Overlay */}
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                        
+                        {/* Match Score Badge */}
+                        <div className="absolute top-3 right-3">
+                          <div className="flex items-center gap-1 px-3 py-1 bg-green-500/90 backdrop-blur-sm rounded-full">
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                            <span className="text-white text-sm font-bold">
+                              {Math.round((destination.query?.affinity || 0.8) * 100)}%
+                            </span>
+                          </div>
+                        </div>
+                        
+                        {/* Popularity Badge */}
+                        <div className="absolute top-3 left-3">
+                          <div className="flex items-center gap-1 px-3 py-1 bg-yellow-500/90 backdrop-blur-sm rounded-full">
+                            <Star className="h-3 w-3 text-white" />
+                            <span className="text-white text-sm font-bold">
+                              {Math.round((destination.popularity || 0.8) * 100)}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Content */}
+                      <div className="p-6">
+                        {/* Title and Location */}
+                        <div className="mb-4">
+                          <h4 className="text-xl font-bold text-white mb-2 group-hover:text-purple-300 transition-colors duration-200">
+                            {destination.name}
+                          </h4>
+                          
+                          {/* Location Info */}
+                          {destination.properties?.geocode && (
+                            <div className="flex items-center gap-2 mb-2">
+                              <MapPin className="h-4 w-4 text-blue-400" />
+                              <span className="text-blue-300 text-sm font-medium">
                                 {destination.properties.geocode.admin1_region && 
                                  destination.properties.geocode.country_code && 
                                  `${destination.properties.geocode.admin1_region}, ${destination.properties.geocode.country_code}`}
                               </span>
                             </div>
-                            {destination.location && (
-                              <div className="text-gray-400 text-xs">
-                                📍 {destination.location.lat.toFixed(2)}°, {destination.location.lon.toFixed(2)}°
-                              </div>
-                            )}
-                          </div>
-                        )}
+                          )}
+                          
+                          {/* Coordinates */}
+                          {destination.location && (
+                            <div className="text-gray-400 text-xs flex items-center gap-1">
+                              <span>📍</span>
+                              <span>{destination.location.lat.toFixed(2)}°, {destination.location.lon.toFixed(2)}°</span>
+                            </div>
+                          )}
+                        </div>
                         
-                        {/* Tags */}
+                        {/* Cultural Tags */}
                         {destination.tags && destination.tags.length > 0 && (
-                          <div className="mb-3">
+                          <div className="mb-4">
+                            <div className="text-gray-400 text-xs mb-2 font-medium">Cultural Vibes</div>
                             <div className="flex flex-wrap gap-1">
-                              {destination.tags.slice(0, 3).map((tag, tagIndex) => (
+                              {destination.tags.slice(0, 4).map((tag, tagIndex) => (
                                 <span 
                                   key={tag.tag_id || tagIndex}
-                                  className="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs rounded-full border border-orange-400/30"
+                                  className="px-2 py-1 bg-gradient-to-r from-orange-500/20 to-pink-500/20 text-orange-300 text-xs rounded-full border border-orange-400/30 font-medium"
                                 >
                                   {tag.name}
                                 </span>
                               ))}
-                              {destination.tags.length > 3 && (
-                                <span className="text-gray-400 text-xs">
-                                  +{destination.tags.length - 3} more
+                              {destination.tags.length > 4 && (
+                                <span className="text-gray-400 text-xs px-2 py-1">
+                                  +{destination.tags.length - 4}
                                 </span>
                               )}
                             </div>
                           </div>
                         )}
                         
-                        <div className="flex items-center justify-between">
-                          {/* Popularity */}
-                          <div className="flex items-center gap-1">
-                            <div className="flex items-center gap-1">
-                              <Star className="h-4 w-4 text-yellow-400" />
-                              <span className="text-gray-400 text-sm">
-                                {Math.round((destination.popularity || 0.8) * 100)}%
-                              </span>
-                            </div>
-                            <span className="text-gray-500 text-xs">popular</span>
-                          </div>
+                        {/* Action Buttons */}
+                        <div className="flex gap-2">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDestinationSelect(destination);
+                            }}
+                            className="flex-1 px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-purple-500/25"
+                          >
+                            Select Destination
+                          </button>
                           
-                          {/* Match Score */}
-                          <div className="flex items-center gap-1">
-                            <div className="w-2 h-2 bg-green-400 rounded-full"></div>
-                            <span className="text-green-400 text-sm font-medium">
-                              {Math.round((destination.query?.affinity || 0.8) * 100)}% match
-                            </span>
-                          </div>
+                          {destination.location && (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const { lat, lon } = destination.location;
+                                const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&zoom=12`;
+                                window.open(mapUrl, '_blank');
+                              }}
+                              className="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white font-semibold rounded-lg transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 flex items-center gap-2"
+                              title="View on Google Maps"
+                            >
+                              <MapPin className="h-4 w-4" />
+                              Map
+                            </button>
+                          )}
                         </div>
-                      </div>
-                      <div className="absolute inset-0 bg-purple-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center">
-                        <span className="text-white font-semibold">Select Destination</span>
                       </div>
                     </motion.div>
                   ))}
