@@ -29,6 +29,10 @@ const PersonaPage: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
 
+  // Cultural Identity LLM state
+  const [culturalIdentity, setCulturalIdentity] = useState<string>('');
+  const [loadingCulturalIdentity, setLoadingCulturalIdentity] = useState(false);
+
   useEffect(() => {
     const savedTastes = localStorage.getItem('userTastes');
     const savedEntities = localStorage.getItem('foundEntities');
@@ -52,6 +56,12 @@ const PersonaPage: React.FC = () => {
       }
     } else {
       setLoading(false);
+    }
+
+    // Load saved cultural identity
+    const savedCulturalIdentity = localStorage.getItem('culturalIdentity');
+    if (savedCulturalIdentity) {
+      setCulturalIdentity(savedCulturalIdentity);
     }
   }, []);
 
@@ -269,6 +279,71 @@ const PersonaPage: React.FC = () => {
     if (analysisData?.tags) {
       await generateInsights(analysisData.tags);
     }
+  };
+
+  const generateCulturalIdentity = async () => {
+    if (!selectedEntities.length || !analysisData?.tags) {
+      console.error('Missing required data for cultural identity generation');
+      return;
+    }
+
+    setLoadingCulturalIdentity(true);
+    try {
+      const entityNames = selectedEntities.map(e => e.name).join(', ');
+      const tagNames = analysisData.tags.slice(0, 8).map((t: any) => t.name).join(', ');
+      const audienceTypes = selectedAudiences.length > 0 
+        ? selectedAudiences.map(a => a.name).join(', ')
+        : 'creative professionals, cultural enthusiasts';
+
+      const prompt = `Based on the following data, write a short, expressive summary of the user's cultural identity. This should feel like a taste-based psychological profile or cultural fingerprint — not a story. Keep it personal, warm, and concise (100–150 words max). Avoid listing items; instead, synthesize the themes.
+
+Selected Entities:
+${entityNames}
+
+Tags:
+${tagNames}
+
+Audience Segments:
+${audienceTypes}
+
+Now generate: "Your Cultural Identity"`;
+
+      const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_TOGETHER_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemma-3n-E4B-it',
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const identity = data.choices?.[0]?.message?.content || 'Sorry, there was an error generating your cultural identity. Please try again.';
+      
+      setCulturalIdentity(identity);
+      localStorage.setItem('culturalIdentity', identity);
+    } catch (error) {
+      console.error('Error generating cultural identity:', error);
+      setCulturalIdentity('Sorry, there was an error generating your cultural identity. Please try again.');
+    } finally {
+      setLoadingCulturalIdentity(false);
+    }
+  };
+
+  const copyCulturalIdentity = () => {
+    navigator.clipboard.writeText(culturalIdentity);
   };
 
   const InsightCarousel: React.FC<{ title: string; icon: React.ReactNode; items: any[]; type: string }> = ({ title, icon, items, type }) => {
@@ -925,7 +1000,7 @@ const PersonaPage: React.FC = () => {
                 <Brain className="h-6 w-6" />
               </div>
               <h3 className="text-xl font-semibold text-gray-800">AI-Generated Summary</h3>
-              {loadingSummary && (
+              {loadingCulturalIdentity && (
                 <motion.div
                   animate={{ opacity: [1, 0, 1] }}
                   transition={{ duration: 1, repeat: Infinity }}
@@ -935,25 +1010,58 @@ const PersonaPage: React.FC = () => {
               )}
             </div>
             
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 0.5 }}
-              className="prose prose-lg max-w-none"
-            >
-              <p className="text-gray-700 leading-relaxed text-lg">
-                {personaSummary}
-                {loadingSummary && (
-                  <motion.span
-                    animate={{ opacity: [1, 0] }}
-                    transition={{ duration: 0.5, repeat: Infinity }}
-                    className="inline-block w-0.5 h-6 bg-purple-500 ml-1"
-                  />
+            {!culturalIdentity && !loadingCulturalIdentity ? (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🧬</div>
+                <p className="text-gray-600 mb-6">
+                  Generate your AI-powered cultural identity based on your selected preferences
+                </p>
+                <button
+                  onClick={generateCulturalIdentity}
+                  disabled={!selectedEntities.length || !analysisData?.tags}
+                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Generate Cultural Identity
+                </button>
+              </div>
+            ) : (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="prose prose-lg max-w-none"
+              >
+                <p className="text-gray-700 leading-relaxed text-lg">
+                  {culturalIdentity}
+                  {loadingCulturalIdentity && (
+                    <motion.span
+                      animate={{ opacity: [1, 0] }}
+                      transition={{ duration: 0.5, repeat: Infinity }}
+                      className="inline-block w-0.5 h-6 bg-purple-500 ml-1"
+                    />
+                  )}
+                </p>
+                
+                {culturalIdentity && !loadingCulturalIdentity && (
+                  <div className="flex gap-3 mt-6">
+                    <button
+                      onClick={generateCulturalIdentity}
+                      className="px-4 py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300"
+                    >
+                      Regenerate
+                    </button>
+                    <button
+                      onClick={copyCulturalIdentity}
+                      className="px-4 py-2 bg-white text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-all duration-300 border border-gray-300"
+                    >
+                      Copy
+                    </button>
+                  </div>
                 )}
-              </p>
-            </motion.div>
+              </motion.div>
+            )}
 
-            {!loadingSummary && personaSummary && (
+            {!loadingCulturalIdentity && culturalIdentity && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -961,7 +1069,7 @@ const PersonaPage: React.FC = () => {
                 className="mt-6 p-4 bg-gradient-to-r from-purple-100 to-pink-100 border border-purple-200 rounded-xl"
               >
                 <p className="text-purple-700 text-sm font-medium">
-                  ✨ This analysis was generated using AI based on your cultural preferences and taste patterns.
+                  ✨ This cultural identity was generated using Google Gemma AI based on your selected preferences and taste patterns.
                 </p>
               </motion.div>
             )}
