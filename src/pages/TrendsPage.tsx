@@ -16,6 +16,79 @@ const TrendsPage: React.FC = () => {
   const [endDate, setEndDate] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState<string>('all');
 
+  // Language code to full name mapping
+  const getLanguageFullName = (code: string) => {
+    const languageMap: Record<string, string> = {
+      'en': 'English',
+      'es': 'Spanish',
+      'fr': 'French',
+      'de': 'German',
+      'it': 'Italian',
+      'pt': 'Portuguese',
+      'ru': 'Russian',
+      'ja': 'Japanese',
+      'ko': 'Korean',
+      'zh': 'Chinese',
+      'ar': 'Arabic',
+      'hi': 'Hindi',
+      'th': 'Thai',
+      'vi': 'Vietnamese',
+      'nl': 'Dutch',
+      'sv': 'Swedish',
+      'no': 'Norwegian',
+      'da': 'Danish',
+      'fi': 'Finnish',
+      'pl': 'Polish',
+      'cs': 'Czech',
+      'hu': 'Hungarian',
+      'ro': 'Romanian',
+      'bg': 'Bulgarian',
+      'hr': 'Croatian',
+      'sk': 'Slovak',
+      'sl': 'Slovenian',
+      'et': 'Estonian',
+      'lv': 'Latvian',
+      'lt': 'Lithuanian',
+      'mt': 'Maltese',
+      'ga': 'Irish',
+      'cy': 'Welsh',
+      'eu': 'Basque',
+      'ca': 'Catalan',
+      'gl': 'Galician',
+      'tr': 'Turkish',
+      'he': 'Hebrew',
+      'fa': 'Persian',
+      'ur': 'Urdu',
+      'bn': 'Bengali',
+      'ta': 'Tamil',
+      'te': 'Telugu',
+      'ml': 'Malayalam',
+      'kn': 'Kannada',
+      'gu': 'Gujarati',
+      'pa': 'Punjabi',
+      'mr': 'Marathi',
+      'ne': 'Nepali',
+      'si': 'Sinhala',
+      'my': 'Burmese',
+      'km': 'Khmer',
+      'lo': 'Lao',
+      'ka': 'Georgian',
+      'am': 'Amharic',
+      'sw': 'Swahili',
+      'zu': 'Zulu',
+      'af': 'Afrikaans',
+      'is': 'Icelandic',
+      'fo': 'Faroese',
+      'mk': 'Macedonian',
+      'sq': 'Albanian',
+      'sr': 'Serbian',
+      'bs': 'Bosnian',
+      'me': 'Montenegrin'
+    };
+    
+    return languageMap[code.toLowerCase()] || code.toUpperCase();
+  };
+
   // Initialize dates
   useEffect(() => {
     const today = new Date();
@@ -393,7 +466,7 @@ const TrendsPage: React.FC = () => {
                               <option value="all">All Languages</option>
                               {getAvailableLanguages(entity).map((lang) => (
                                 <option key={lang} value={lang}>
-                                  {lang.toUpperCase()}
+                                  {getLanguageFullName(lang)}
                                 </option>
                               ))}
                             </select>
@@ -406,7 +479,7 @@ const TrendsPage: React.FC = () => {
                               <span
                                 key={akaIndex}
                                 className="px-3 py-1 bg-cyan-500/20 text-cyan-300 text-xs rounded-full border border-cyan-400/30"
-                                title={`Languages: ${aka.languages ? aka.languages.join(', ') : 'N/A'}`}
+                                title={`Languages: ${aka.languages ? aka.languages.map((lang: string) => getLanguageFullName(lang)).join(', ') : 'N/A'}`}
                               >
                                 {aka.value}
                               </span>
@@ -414,7 +487,7 @@ const TrendsPage: React.FC = () => {
                           </div>
                           {filterByLanguage(entity.properties.akas, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
                             <div className="text-center py-4 text-gray-400">
-                              No alternative names available in {selectedLanguage.toUpperCase()}
+                              No alternative names available in {getLanguageFullName(selectedLanguage)}
                             </div>
                           )}
                         </div>
@@ -432,30 +505,20 @@ const TrendsPage: React.FC = () => {
                         </div>
                         
                         <div className="max-h-48 overflow-y-auto">
-                          <div className="space-y-3">
+                          <div className="flex flex-wrap gap-2">
                             {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).map((desc: any, descIndex: number) => (
-                              <div key={descIndex} className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/20">
-                                <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              <span
+                                key={descIndex}
+                                className="px-3 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-400/30"
+                                title={`Languages: ${desc.languages ? desc.languages.map((lang: string) => getLanguageFullName(lang)).join(', ') : 'N/A'}`}
+                              >
                                   {desc.value}
-                                </div>
-                                {desc.languages && desc.languages.length > 0 && (
-                                  <div className="mt-2 flex flex-wrap gap-1">
-                                    {desc.languages.map((lang: string, langIndex: number) => (
-                                      <span
-                                        key={langIndex}
-                                        className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30"
-                                      >
-                                        {lang.toUpperCase()}
-                                      </span>
-                                    ))}
-                                  </div>
-                                )}
-                              </div>
+                              </span>
                             ))}
                           </div>
                           {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
                             <div className="text-center py-4 text-gray-400">
-                              No descriptions available in {selectedLanguage.toUpperCase()}
+                              No descriptions available in {getLanguageFullName(selectedLanguage)}
                             </div>
                           )}
                         </div>
