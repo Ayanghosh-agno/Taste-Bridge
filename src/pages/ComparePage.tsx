@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Users, Zap, BarChart3, Search, X, Star } from 'lucide-react';
 import { qlooService } from '../services/qloo';
+import { togetherService } from '../services/together';
 
 const ComparePage: React.FC = () => {
   const [profile1, setProfile1] = useState('');
@@ -16,6 +17,8 @@ const ComparePage: React.FC = () => {
   const [searching2, setSearching2] = useState(false);
   const [comparisonData, setComparisonData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [aiAnalysis, setAiAnalysis] = useState('');
+  const [generatingAnalysis, setGeneratingAnalysis] = useState(false);
 
   const handleSearch = async (query: string, profileNumber: 1 | 2) => {
     if (!query.trim()) {
@@ -95,10 +98,54 @@ const ComparePage: React.FC = () => {
       const comparison = await qlooService.compareEntities(entityIds1, entityIds2);
       
       setComparisonData(comparison);
+      
+      // Generate AI analysis after comparison is complete
+      await generateAIAnalysis(comparison);
     } catch (error) {
       console.error('Error comparing profiles:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateAIAnalysis = async (comparison: any) => {
+    setGeneratingAnalysis(true);
+    try {
+      const prompt = `You are a cultural anthropologist and data analyst. Based on the following cultural comparison data between two profiles, provide a comprehensive analysis:
+
+Profile A: ${selectedEntity1?.name || 'Profile A'}
+Profile B: ${selectedEntity2?.name || 'Profile B'}
+
+Comparison Results:
+- Cultural Overlap Score: ${Math.round((comparison.overlapScore || 0) * 100)}%
+- Shared Preferences: ${comparison.commonTags?.length || 0} common cultural tags
+- Profile A Strengths: ${comparison.profile1Stronger?.length || 0} distinctive preferences
+- Profile B Strengths: ${comparison.profile2Stronger?.length || 0} distinctive preferences
+- Total Cultural Tags Analyzed: ${comparison.totalTags || 0}
+- Average Cultural Affinity: ${((comparison.avgAffinity || 0) * 1000).toFixed(2)}‰
+
+Top Shared Cultural Tags: ${comparison.commonTags?.slice(0, 5).map((tag: any) => tag.name).join(', ') || 'None'}
+
+Profile A Distinctive Tags: ${comparison.profile1Stronger?.slice(0, 3).map((tag: any) => tag.name).join(', ') || 'None'}
+
+Profile B Distinctive Tags: ${comparison.profile2Stronger?.slice(0, 3).map((tag: any) => tag.name).join(', ') || 'None'}
+
+Please provide:
+1. A detailed cultural compatibility analysis
+2. Insights into what this overlap means for shared experiences
+3. Recommendations for cultural activities both profiles would enjoy
+4. Analysis of how their differences could complement each other
+5. Potential areas of cultural discovery for each profile
+
+Keep the analysis engaging, insightful, and practical. Focus on cultural implications and real-world applications.`;
+
+      const analysis = await togetherService.generateCulturalAnalysis(prompt);
+      setAiAnalysis(analysis);
+    } catch (error) {
+      console.error('Error generating AI analysis:', error);
+      setAiAnalysis('Unable to generate AI analysis at this time. Please try again later.');
+    } finally {
+      setGeneratingAnalysis(false);
     }
   };
 
@@ -783,52 +830,109 @@ const ComparePage: React.FC = () => {
               <div className="flex items-center mb-6">
                 <Users className="h-6 w-6 text-purple-400 mr-3" />
                 <h3 className="text-2xl font-semibold text-white">AI Cultural Analysis</h3>
+                {generatingAnalysis && (
+                  <motion.div
+                    animate={{ opacity: [1, 0, 1] }}
+                    transition={{ duration: 1, repeat: Infinity }}
+                    className="ml-3"
+                  >
+                    <div className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                  </motion.div>
+                )}
               </div>
               
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ duration: 1, delay: 0.5 }}
-                className="space-y-4"
-              >
-                <p className="text-gray-300 text-lg leading-relaxed">
-                  {comparisonData.overlapScore > 0.7 
-                    ? `These profiles show exceptional cultural alignment (${Math.round(comparisonData.overlapScore * 100)}% compatibility), indicating very similar taste preferences and strong potential for shared experiences.`
-                    : comparisonData.overlapScore > 0.4
-                    ? `These profiles demonstrate moderate cultural compatibility (${Math.round(comparisonData.overlapScore * 100)}% compatibility), with meaningful overlap in preferences.`
-                    : `These profiles show distinct cultural preferences (${Math.round(comparisonData.overlapScore * 100)}% compatibility), offering opportunities for diverse cultural discovery.`
-                  }
-                </p>
-                
-                {comparisonData.commonTags && comparisonData.commonTags.length > 0 && (
-                  <p className="text-purple-300">
-                    <strong>Key shared interests:</strong> {comparisonData.commonTags.slice(0, 5).map((tag: any) => tag.name).join(', ')}.
-                  </p>
-                )}
-                
-                {comparisonData.topTags && comparisonData.topTags.length > 0 && (
-                  <p className="text-yellow-300">
-                    <strong>Top mutual preferences:</strong> {comparisonData.topTags.slice(0, 3).map((tag: any) => tag.name).join(', ')}.
-                  </p>
-                )}
-                
-                <div className="grid md:grid-cols-3 gap-4 mt-6 p-4 bg-gray-700/20 rounded-xl">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-white">{comparisonData.totalTags || 0}</div>
-                    <div className="text-gray-400 text-sm">Total Tags Analyzed</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-green-400">{comparisonData.commonTags?.length || 0}</div>
-                    <div className="text-gray-400 text-sm">Shared Preferences</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">
-                      {Object.keys(comparisonData.tagsByCategory || {}).length}
-                    </div>
-                    <div className="text-gray-400 text-sm">Categories Covered</div>
-                  </div>
+              {generatingAnalysis ? (
+                <div className="text-center py-8">
+                  <div className="text-gray-300 mb-4">Generating comprehensive cultural analysis...</div>
+                  <div className="text-sm text-gray-400">This may take a few moments</div>
                 </div>
-              </motion.div>
+              ) : aiAnalysis ? (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 0.5 }}
+                  className="space-y-4"
+                >
+                  <div className="prose prose-invert max-w-none">
+                    <div className="text-gray-300 leading-relaxed whitespace-pre-wrap">
+                      {aiAnalysis}
+                    </div>
+                  </div>
+                  
+                  <div className="grid md:grid-cols-3 gap-4 mt-6 p-4 bg-gray-700/20 rounded-xl">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">{comparisonData.totalTags || 0}</div>
+                      <div className="text-gray-400 text-sm">Total Tags Analyzed</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400">{comparisonData.commonTags?.length || 0}</div>
+                      <div className="text-gray-400 text-sm">Shared Preferences</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">
+                        {Object.keys(comparisonData.tagsByCategory || {}).length}
+                      </div>
+                      <div className="text-gray-400 text-sm">Categories Covered</div>
+                    </div>
+                  </div>
+                  
+                  <motion.div
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.3 }}
+                    className="mt-4 p-3 bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-400/20 rounded-xl"
+                  >
+                    <p className="text-purple-300 text-sm font-medium">
+                      ✨ This analysis was generated using Google Gemma AI based on cultural comparison data from Qloo.
+                    </p>
+                  </motion.div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ duration: 1, delay: 0.5 }}
+                  className="space-y-4"
+                >
+                  <p className="text-gray-300 text-lg leading-relaxed">
+                    {comparisonData.overlapScore > 0.7 
+                      ? `These profiles show exceptional cultural alignment (${Math.round(comparisonData.overlapScore * 100)}% compatibility), indicating very similar taste preferences and strong potential for shared experiences.`
+                      : comparisonData.overlapScore > 0.4
+                      ? `These profiles demonstrate moderate cultural compatibility (${Math.round(comparisonData.overlapScore * 100)}% compatibility), with meaningful overlap in preferences.`
+                      : `These profiles show distinct cultural preferences (${Math.round(comparisonData.overlapScore * 100)}% compatibility), offering opportunities for diverse cultural discovery.`
+                    }
+                  </p>
+                  
+                  {comparisonData.commonTags && comparisonData.commonTags.length > 0 && (
+                    <p className="text-purple-300">
+                      <strong>Key shared interests:</strong> {comparisonData.commonTags.slice(0, 5).map((tag: any) => tag.name).join(', ')}.
+                    </p>
+                  )}
+                  
+                  {comparisonData.topTags && comparisonData.topTags.length > 0 && (
+                    <p className="text-yellow-300">
+                      <strong>Top mutual preferences:</strong> {comparisonData.topTags.slice(0, 3).map((tag: any) => tag.name).join(', ')}.
+                    </p>
+                  )}
+                  
+                  <div className="grid md:grid-cols-3 gap-4 mt-6 p-4 bg-gray-700/20 rounded-xl">
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-white">{comparisonData.totalTags || 0}</div>
+                      <div className="text-gray-400 text-sm">Total Tags Analyzed</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-green-400">{comparisonData.commonTags?.length || 0}</div>
+                      <div className="text-gray-400 text-sm">Shared Preferences</div>
+                    </div>
+                    <div className="text-center">
+                      <div className="text-2xl font-bold text-blue-400">
+                        {Object.keys(comparisonData.tagsByCategory || {}).length}
+                      </div>
+                      <div className="text-gray-400 text-sm">Categories Covered</div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
             </div>
           </motion.div>
         )}
