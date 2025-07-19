@@ -808,7 +808,7 @@ Discover more at: https://tastebridge.app
               </div>
             )}
             
-            <p className="text-center text-gray-600 mt-4">
+            <p className="text-center text-white mt-4">
               Add more interests to refine your cultural persona and discover new recommendations
             </p>
           </div>
