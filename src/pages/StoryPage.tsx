@@ -585,13 +585,13 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                         )}
                         
                         {/* Action Buttons */}
-                        <div className="flex gap-3">
+                        <div className="space-y-3">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handleDestinationSelect(destination);
                             }}
-                            className="flex-1 px-6 py-4 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-600 hover:via-purple-700 hover:to-pink-600 text-white font-bold rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group/btn border border-purple-400/20"
+                            className="w-full px-6 py-4 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-600 hover:via-purple-700 hover:to-pink-600 text-white font-bold rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group/btn border border-purple-400/20"
                           >
                             <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
                             <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 ease-out"></div>
@@ -608,7 +608,7 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&zoom=12`;
                                 window.open(mapUrl, '_blank');
                               }}
-                              className="px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 relative overflow-hidden group/btn border border-blue-400/20 min-w-[120px] justify-center"
+                              className="w-full px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 relative overflow-hidden group/btn border border-blue-400/20 justify-center"
                               title="View on Google Maps"
                             >
                               <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
