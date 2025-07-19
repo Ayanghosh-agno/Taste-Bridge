@@ -458,7 +458,7 @@ Discover more at: https://tastebridge.app
       } else if (trimmedLine.startsWith('## ')) {
         // Main heading
         formattedElements.push(
-          <h2 key={index} className="text-2xl font-bold text-white mb-4 mt-6 first:mt-0">
+          <h2 key={index} className="text-2xl font-bold text-gray-800 mb-4 mt-6 first:mt-0">
             {trimmedLine.replace('## ', '')}
           </h2>
         );
