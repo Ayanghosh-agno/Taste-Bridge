@@ -944,7 +944,7 @@ Discover more at: https://tastebridge.app
           
           {/* Audience Type Categories */}
           <div className="mb-8">
-            <h3 className="text-lg font-semibold text-gray-800 mb-4">Select Audience Category</h3>
+            <h3 className="text-lg font-semibold text-white mb-4">Select Audience Category</h3>
             {loadingAudienceTypes ? (
               <div className="text-center py-8">
                 <motion.div
@@ -981,7 +981,7 @@ Discover more at: https://tastebridge.app
           {/* Available Audiences */}
           {selectedAudienceType && (
             <div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-4">
+              <h3 className="text-lg font-semibold text-white mb-4">
                 Available Audiences - {audienceTypes.find(t => t.id === selectedAudienceType)?.name}
               </h3>
               
