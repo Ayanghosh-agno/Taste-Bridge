@@ -363,15 +363,28 @@ const TrendsPage: React.FC = () => {
                       <div className="mb-6 p-4 bg-gray-800/40 rounded-xl border border-gray-600/30">
                         <div className="flex items-center gap-2 mb-4">
                           <BarChart3 className="h-4 w-4 text-green-400" />
-                          <span className="text-green-400 font-semibold">Description</span>
+                          <span className="text-green-400 font-semibold">All Descriptions ({entity.properties.short_descriptions.length})</span>
                         </div>
-                        <div className="text-gray-300 text-sm leading-relaxed">
-                          {entity.properties.short_descriptions[0]?.value}
-                          {entity.properties.short_descriptions.length > 1 && (
-                            <span className="ml-2 px-2 py-1 bg-green-500/20 text-green-300 text-xs rounded-full">
-                              +{entity.properties.short_descriptions.length - 1} more
-                            </span>
-                          )}
+                        <div className="space-y-3">
+                          {entity.properties.short_descriptions.map((desc: any, descIndex: number) => (
+                            <div key={descIndex} className="p-3 bg-gray-700/30 rounded-lg border border-gray-600/20">
+                              <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                                {desc.value}
+                              </div>
+                              {desc.languages && desc.languages.length > 0 && (
+                                <div className="mt-2 flex flex-wrap gap-1">
+                                  {desc.languages.map((lang: string, langIndex: number) => (
+                                    <span
+                                      key={langIndex}
+                                      className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30"
+                                    >
+                                      {lang}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
                         </div>
                       </div>
                     )}
