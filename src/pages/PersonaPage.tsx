@@ -870,7 +870,27 @@ const PersonaPage: React.FC = () => {
               </p>
               <div className="flex gap-3">
                 <button className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300">
-                  Apply to Insights
+                <button 
+                  onClick={async () => {
+                    if (analysisData?.tags) {
+                      await generateInsights(analysisData.tags);
+                      // Show success feedback
+                      const button = document.activeElement as HTMLButtonElement;
+                      if (button) {
+                        const originalText = button.textContent;
+                        button.textContent = '✓ Applied!';
+                        button.style.background = 'linear-gradient(to right, #10b981, #059669)';
+                        setTimeout(() => {
+                          button.textContent = originalText;
+                          button.style.background = '';
+                        }, 2000);
+                      }
+                    }
+                  }}
+                  disabled={loadingInsights}
+                  className="px-4 py-2 bg-gradient-to-r from-blue-500 to-purple-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-300 disabled:opacity-50"
+                >
+                  {loadingInsights ? 'Applying...' : 'Apply to Insights'}
                 </button>
                 <button 
                   onClick={() => setSelectedAudiences([])}
