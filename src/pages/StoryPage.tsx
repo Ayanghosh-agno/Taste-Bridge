@@ -15,6 +15,10 @@ const StoryPage: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState('');
   const [loading, setLoading] = useState(false);
   const [contentCache, setContentCache] = useState<{[key: string]: string}>({});
+  
+  // Cultural Identity state
+  const [culturalIdentity, setCulturalIdentity] = useState('');
+  const [loadingIdentity, setLoadingIdentity] = useState(false);
 
   useEffect(() => {
     // Load content from cache when switching content types
@@ -25,6 +29,8 @@ const StoryPage: React.FC = () => {
   // Load cached content from localStorage on component mount
   useEffect(() => {
     const savedContent = localStorage.getItem('generatedContent');
+    const savedIdentity = localStorage.getItem('culturalIdentity');
+    
     if (savedContent) {
       try {
         const parsedContent = JSON.parse(savedContent);
@@ -35,6 +41,10 @@ const StoryPage: React.FC = () => {
         console.error('Error parsing saved content:', error);
       }
     }
+    
+    if (savedIdentity) {
+      setCulturalIdentity(savedIdentity);
+    }
   }, []);
 
   // Save content to localStorage whenever cache changes
@@ -43,6 +53,13 @@ const StoryPage: React.FC = () => {
       localStorage.setItem('generatedContent', JSON.stringify(contentCache));
     }
   }, [contentCache]);
+
+  // Save cultural identity to localStorage
+  useEffect(() => {
+    if (culturalIdentity) {
+      localStorage.setItem('culturalIdentity', culturalIdentity);
+    }
+  }, [culturalIdentity]);
 
   const contentTypes = [
     { id: 'story', label: 'Cultural Story', icon: <BookOpen className="h-5 w-5" />, title: 'Your Cultural Identity' },
@@ -157,6 +174,63 @@ const StoryPage: React.FC = () => {
       setGeneratedContent('Sorry, there was an error generating your content. Please try again.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const generateCulturalIdentity = async () => {
+    if (!hasPersonaData) return;
+    
+    setLoadingIdentity(true);
+    try {
+      const entityNames = selectedEntities.map(e => e.name).join(', ');
+      const tagNames = analysisData.tags.slice(0, 8).map((t: any) => t.name).join(', ');
+      const audienceTypes = audienceData.length > 0 
+        ? audienceData.map(a => a.name).join(', ')
+        : 'creative professionals, cultural enthusiasts';
+
+      const prompt = `Based on the following data, write a short, expressive summary of the user's cultural identity. This should feel like a taste-based psychological profile or cultural fingerprint — not a story. Keep it personal, warm, and concise (100–150 words max). Avoid listing items; instead, synthesize the themes.
+
+Selected Entities:
+${entityNames}
+
+Tags:
+${tagNames}
+
+Audience Segments:
+${audienceTypes}
+
+Now generate: "Your Cultural Identity"`;
+
+      const response = await fetch('https://api.together.xyz/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${import.meta.env.VITE_TOGETHER_API_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: 'google/gemma-3n-E4B-it',
+          messages: [
+            {
+              role: 'user',
+              content: prompt
+            }
+          ]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      const identity = data.choices?.[0]?.message?.content || 'Sorry, there was an error generating your cultural identity. Please try again.';
+      
+      setCulturalIdentity(identity);
+    } catch (error) {
+      console.error('Error generating cultural identity:', error);
+      setCulturalIdentity('Sorry, there was an error generating your cultural identity. Please try again.');
+    } finally {
+      setLoadingIdentity(false);
     }
   };
 
@@ -335,6 +409,61 @@ const StoryPage: React.FC = () => {
                 <p className="text-white mt-1">{audienceData.length > 0 ? audienceData.slice(0, 2).map(a => a.name).join(', ') : 'Creative Professionals'}</p>
               </div>
             </div>
+          </div>
+        </motion.div>
+
+        {/* Cultural Identity Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.25 }}
+          className="mb-8"
+        >
+          <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 border border-gray-700">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-white">
+                  <Brain className="h-6 w-6" />
+                </div>
+                <h3 className="text-2xl font-semibold text-white">Your Cultural Identity</h3>
+              </div>
+              <button
+                onClick={generateCulturalIdentity}
+                disabled={loadingIdentity}
+                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {loadingIdentity ? 'Generating...' : 'Generate Cultural Identity'}
+              </button>
+            </div>
+            
+            {culturalIdentity ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="bg-gray-700/30 rounded-xl p-6 border border-gray-600"
+              >
+                <p className="text-gray-300 leading-relaxed text-lg">
+                  {culturalIdentity}
+                </p>
+                <div className="flex gap-3 mt-4">
+                  <button
+                    onClick={() => navigator.clipboard.writeText(culturalIdentity)}
+                    className="flex items-center gap-2 px-4 py-2 bg-gray-600 hover:bg-gray-500 rounded-lg text-white transition-colors duration-200"
+                  >
+                    <Copy className="h-4 w-4" />
+                    Copy
+                  </button>
+                </div>
+              </motion.div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="text-6xl mb-4">🎭</div>
+                <p className="text-gray-400 text-lg">
+                  Click the button above to generate your personalized cultural identity using AI
+                </p>
+              </div>
+            )}
           </div>
         </motion.div>
 
