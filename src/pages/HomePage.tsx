@@ -16,6 +16,26 @@ const HomePage: React.FC = () => {
   const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const navigate = useNavigate();
 
+  // Load foundEntities from localStorage on component mount
+  useEffect(() => {
+    try {
+      const savedEntities = localStorage.getItem('foundEntities');
+      if (savedEntities) {
+        const entities = JSON.parse(savedEntities);
+        setSelectedEntities(entities);
+      }
+    } catch (error) {
+      console.error('Error loading foundEntities from localStorage:', error);
+    }
+  }, []);
+
+  // Save selectedEntities to localStorage whenever it changes
+  useEffect(() => {
+    if (selectedEntities.length > 0) {
+      localStorage.setItem('foundEntities', JSON.stringify(selectedEntities));
+    }
+  }, [selectedEntities]);
+
   const entityTypes = [
     { 
       value: 'urn:entity:actor', 
