@@ -41,12 +41,12 @@ const Footer: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group"
+                className="flex items-center gap-2 px-3 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 hover:text-white transition-all duration-200 group text-sm"
               >
                 <span className="group-hover:scale-110 transition-transform duration-200">
                   {link.icon}
                 </span>
-                {link.label}
+                <span className="hidden sm:inline">{link.label}</span>
               </motion.a>
             ))}
           </div>
