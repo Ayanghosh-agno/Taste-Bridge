@@ -687,66 +687,6 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                       <div className="p-4 text-center">
                         <div className="animate-spin w-6 h-6 border-2 border-orange-400 border-t-transparent rounded-full mx-auto"></div>
                         <p className="text-gray-400 mt-2">Searching destinations...</p>
-                            {/* Address */}
-                            {place.properties?.address && (
-                              <div className="mb-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className="p-1 bg-gray-500/20 rounded-full">
-                                    <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                                    </svg>
-                                  </div>
-                                  <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Address</span>
-                                </div>
-                                <p className="text-gray-300 text-sm leading-relaxed pl-5">
-                                  {place.properties.address}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Disambiguation */}
-                            {place.disambiguation && (
-                              <div className="mb-3">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <div className="p-1 bg-blue-500/20 rounded-full">
-                                    <svg className="h-3 w-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                    </svg>
-                                  </div>
-                                  <span className="text-blue-400 text-xs font-semibold uppercase tracking-wider">About</span>
-                                </div>
-                                <p className="text-blue-200 text-sm leading-relaxed pl-5 italic">
-                                  {place.disambiguation}
-                                </p>
-                              </div>
-                            )}
-                            
-                            {/* Popularity Score */}
-                            {place.popularity && (
-                              <div className="mb-3">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <div className="p-1 bg-yellow-500/20 rounded-full">
-                                    <Star className="h-3 w-3 text-yellow-400" />
-                                  </div>
-                                  <span className="text-yellow-400 text-xs font-semibold uppercase tracking-wider">Popularity</span>
-                                </div>
-                                <div className="pl-5">
-                                  <div className="flex items-center gap-3">
-                                    <div className="flex-1 bg-gray-600 rounded-full h-2 overflow-hidden">
-                                      <div 
-                                        className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-1000"
-                                        style={{ width: `${Math.min(place.popularity * 100, 100)}%` }}
-                                      />
-                                    </div>
-                                    <span className="text-yellow-300 text-sm font-bold">
-                                      {Math.round(place.popularity * 100)}%
-                                    </span>
-                                  </div>
-                                </div>
-                              </div>
-                            )}
-                            
                       </div>
                     ) : (
                       searchDestinationResults.map((destination, index) => (
@@ -1004,6 +944,66 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                       <h4 className="text-xl font-bold text-white mb-3 group-hover:text-transparent group-hover:bg-gradient-to-r group-hover:from-green-300 group-hover:to-teal-300 group-hover:bg-clip-text transition-all duration-300">
                         {place.name}
                       </h4>
+                      
+                      {/* Address */}
+                      {place.properties?.address && (
+                        <div className="mb-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="p-1 bg-gray-500/20 rounded-full">
+                              <svg className="h-3 w-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                              </svg>
+                            </div>
+                            <span className="text-gray-400 text-xs font-semibold uppercase tracking-wider">Address</span>
+                          </div>
+                          <p className="text-gray-300 text-sm leading-relaxed pl-5">
+                            {place.properties.address}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Disambiguation */}
+                      {place.disambiguation && (
+                        <div className="mb-3">
+                          <div className="flex items-center gap-2 mb-1">
+                            <div className="p-1 bg-blue-500/20 rounded-full">
+                              <svg className="h-3 w-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <span className="text-blue-400 text-xs font-semibold uppercase tracking-wider">About</span>
+                          </div>
+                          <p className="text-blue-200 text-sm leading-relaxed pl-5 italic">
+                            {place.disambiguation}
+                          </p>
+                        </div>
+                      )}
+                      
+                      {/* Popularity Score */}
+                      {place.popularity && (
+                        <div className="mb-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="p-1 bg-yellow-500/20 rounded-full">
+                              <Star className="h-3 w-3 text-yellow-400" />
+                            </div>
+                            <span className="text-yellow-400 text-xs font-semibold uppercase tracking-wider">Popularity</span>
+                          </div>
+                          <div className="pl-5">
+                            <div className="flex items-center gap-3">
+                              <div className="flex-1 bg-gray-600 rounded-full h-2 overflow-hidden">
+                                <div 
+                                  className="h-full bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full transition-all duration-1000"
+                                  style={{ width: `${Math.min(place.popularity * 100, 100)}%` }}
+                                />
+                              </div>
+                              <span className="text-yellow-300 text-sm font-bold">
+                                {Math.round(place.popularity * 100)}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
                       
                       {/* Tags */}
                       {place.tags && place.tags.length > 0 && (
