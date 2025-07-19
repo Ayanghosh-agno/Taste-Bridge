@@ -645,10 +645,10 @@ Discover more at: https://tastebridge.app
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="text-center mb-12"
+          className="text-center mb-12 relative z-10"
         >
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">Your Cultural Persona</h1>
-          <p className="text-xl text-gray-600">Discover the story behind your tastes</p>
+          <h1 className="text-5xl font-bold text-white mb-4">Your Cultural Persona</h1>
+          <p className="text-xl text-gray-300">Discover the story behind your tastes</p>
         </motion.div>
 
         {/* 1. Selected Identity Cards */}
