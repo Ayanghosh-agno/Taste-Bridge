@@ -367,7 +367,6 @@ class QlooService {
     }
   }
 
-  async searchEntities(query: string, limit: number = 10): Promise<QlooEntity[]> {
   async searchEntities(query: string, limit: number = 10, type?: string): Promise<QlooEntity[]> {
     try {
       let url = `/search?query=${encodeURIComponent(query)}&take=${limit}`;
@@ -971,14 +970,14 @@ class QlooService {
         const date = new Date(startDate);
         date.setDate(date.getDate() + i);
         return {
-        day: `${date.getMonth() + 1}/${date.getDate()}`,
-        fullDate: date.toISOString(),
-        dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
-        popularity: Math.random(),
-        rank: Math.floor(Math.random() * 100) + 1,
-        rankDelta: Math.floor(Math.random() * 21) - 10,
-        populationPercentDelta: (Math.random() - 0.5) * 0.01,
-        value: Math.floor(Math.random() * 100) + 50
+          day: `${date.getMonth() + 1}/${date.getDate()}`,
+          fullDate: date.toISOString(),
+          dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
+          popularity: Math.random(),
+          rank: Math.floor(Math.random() * 100) + 1,
+          rankDelta: Math.floor(Math.random() * 21) - 10,
+          populationPercentDelta: (Math.random() - 0.5) * 0.01,
+          value: Math.floor(Math.random() * 100) + 50
         };
       });
     } catch (error) {
@@ -989,14 +988,14 @@ class QlooService {
         const date = new Date(startDate);
         date.setDate(date.getDate() + i);
         return {
-        day: `${date.getMonth() + 1}/${date.getDate()}`,
-        fullDate: date.toISOString(),
-        dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
-        popularity: Math.random(),
-        rank: Math.floor(Math.random() * 100) + 1,
-        rankDelta: Math.floor(Math.random() * 21) - 10,
-        populationPercentDelta: (Math.random() - 0.5) * 0.01,
-        value: Math.floor(Math.random() * 100) + 50
+          day: `${date.getMonth() + 1}/${date.getDate()}`,
+          fullDate: date.toISOString(),
+          dayName: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][date.getDay()],
+          popularity: Math.random(),
+          rank: Math.floor(Math.random() * 100) + 1,
+          rankDelta: Math.floor(Math.random() * 21) - 10,
+          populationPercentDelta: (Math.random() - 0.5) * 0.01,
+          value: Math.floor(Math.random() * 100) + 50
         };
       });
     }
