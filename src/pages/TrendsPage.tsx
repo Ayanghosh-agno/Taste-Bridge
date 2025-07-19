@@ -242,8 +242,7 @@ const TrendsPage: React.FC = () => {
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ duration: 0.4, delay: 0.3 + index * 0.1 }}
-                    className="group p-6 bg-gradient-to-r from-gray-800/40 to-gray-700/40 rounded-2xl hover:from-gray-700/60 hover:to-gray-600/60 transition-all duration-300 border border-gray-600/30 hover:border-purple-400/30 hover:shadow-lg hover:shadow-purple-500/10 cursor-pointer"
-                    onClick={() => handleEntityClick(entity)}
+                    className="group p-6 bg-gradient-to-r from-gray-800/40 to-gray-700/40 rounded-2xl hover:from-gray-700/60 hover:to-gray-600/60 transition-all duration-300 border border-gray-600/30 hover:border-purple-400/30 hover:shadow-lg hover:shadow-purple-500/10"
                   >
                     {/* Header with rank, name and image */}
                     <div className="flex items-start gap-6 mb-6">
@@ -270,7 +269,12 @@ const TrendsPage: React.FC = () => {
                       {/* Name and basic info */}
                       <div className="flex-1">
                         <div className="flex items-center gap-3 mb-3">
-                          <h4 className="text-white font-bold text-xl group-hover:text-purple-300 transition-colors duration-300">{entity.name}</h4>
+                          <h4 
+                            className="text-white font-bold text-xl hover:text-purple-300 transition-colors duration-300 cursor-pointer underline-offset-4 hover:underline"
+                            onClick={() => handleEntityClick(entity)}
+                          >
+                            {entity.name}
+                          </h4>
                           {entity.entity_id && (
                             <span className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30">
                               ID
@@ -291,6 +295,17 @@ const TrendsPage: React.FC = () => {
                         </div>
                         {entity.disambiguation && (
                           <p className="text-gray-400 text-sm mb-3">{entity.disambiguation}</p>
+                        )}
+                        
+                        {/* Full Description */}
+                        {entity.properties?.description && (
+                          <div className="mb-4 p-3 bg-gray-800/40 rounded-lg border border-gray-600/30">
+                            <div className="flex items-center gap-2 mb-2">
+                              <BarChart3 className="h-4 w-4 text-blue-400" />
+                              <span className="text-blue-400 font-semibold text-sm">Description</span>
+                            </div>
+                            <p className="text-gray-300 text-sm leading-relaxed">{entity.properties.description}</p>
+                          </div>
                         )}
                         
                         {/* Popularity */}
