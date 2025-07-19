@@ -150,6 +150,7 @@ const HomePage: React.FC = () => {
   ];
 
   const [selectedCategories, setSelectedCategories] = useState<string[]>(['Entertainment', 'Music']);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<'categories' | 'types'>('categories');
 
   const toggleCategory = (categoryName: string) => {
