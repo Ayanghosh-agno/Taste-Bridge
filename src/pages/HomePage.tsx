@@ -216,6 +216,27 @@ const HomePage: React.FC = () => {
       return;
     }
     
+    // Auto-tick the category based on the selected entity
+    const entityType = entity.type || entity.types?.[0];
+    if (entityType) {
+      const matchingEntityType = entityTypes.find(type => type.value === entityType);
+      if (matchingEntityType && matchingEntityType.category) {
+        // Add the category if not already selected
+        setSelectedCategories(prev => 
+          prev.includes(matchingEntityType.category) 
+            ? prev 
+            : [...prev, matchingEntityType.category]
+        );
+        
+        // Add the entity type if not already selected
+        setSelectedEntityTypes(prev => 
+          prev.includes(entityType) 
+            ? prev 
+            : [...prev, entityType]
+        );
+      }
+    }
+    
     setSelectedEntities(prev => [...prev, entity]);
     setSearchInput('');
     setShowSuggestions(false);
@@ -512,45 +533,6 @@ const HomePage: React.FC = () => {
                 )}
                 
                 {/* Control Buttons */}
-                <div className="flex flex-wrap justify-center gap-3 mb-6">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      if (viewMode === 'categories') {
-                        setSelectedCategories(categories.map(c => c.name));
-                        setSelectedEntityTypes(entityTypes.map(t => t.value));
-                      } else {
-                        setSelectedEntityTypes(entityTypes.map(t => t.value));
-                      }
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-green-500/20 to-emerald-500/20 text-green-300 rounded-xl hover:from-green-500/30 hover:to-emerald-500/30 transition-all duration-200 border border-green-400/30 font-medium"
-                  >
-                    ✨ Select All
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setSelectedEntityTypes([]);
-                      setSelectedCategories([]);
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-red-500/20 to-pink-500/20 text-red-300 rounded-xl hover:from-red-500/30 hover:to-pink-500/30 transition-all duration-200 border border-red-400/30 font-medium"
-                  >
-                    🗑️ Clear All
-                  </motion.button>
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    onClick={() => {
-                      setSelectedEntityTypes(['urn:entity:artist', 'urn:entity:movie']);
-                      setSelectedCategories(['Entertainment', 'Music']);
-                    }}
-                    className="px-6 py-3 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 text-orange-300 rounded-xl hover:from-orange-500/30 hover:to-yellow-500/30 transition-all duration-200 border border-orange-400/30 font-medium"
-                  >
-                    🔄 Reset Default
-                  </motion.button>
-                </div>
                 
                 {/* Status Summary */}
                 <motion.div
