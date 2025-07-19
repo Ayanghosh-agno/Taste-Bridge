@@ -65,6 +65,9 @@ const PersonaPage: React.FC = () => {
       const analysis = await qlooService.getAnalysis(entityIds);
       setAnalysisData(analysis);
       
+      // Store analysis data in localStorage
+      localStorage.setItem('analysisData', JSON.stringify(analysis));
+      
       // Step 2: Get Insights for different types
       await generateInsights(analysis.tags);
       
@@ -121,15 +124,24 @@ const PersonaPage: React.FC = () => {
   const handleAudienceSelect = (audience: any) => {
     if (selectedAudiences.find(a => a.id === audience.id)) {
       // Remove if already selected
-      setSelectedAudiences(prev => prev.filter(a => a.id !== audience.id));
+      const updatedAudiences = selectedAudiences.filter(a => a.id !== audience.id);
+      setSelectedAudiences(updatedAudiences);
+      // Store updated audiences in localStorage
+      localStorage.setItem('selectedAudiences', JSON.stringify(updatedAudiences));
     } else {
       // Add to selected
-      setSelectedAudiences(prev => [...prev, audience]);
+      const updatedAudiences = [...selectedAudiences, audience];
+      setSelectedAudiences(updatedAudiences);
+      // Store updated audiences in localStorage
+      localStorage.setItem('selectedAudiences', JSON.stringify(updatedAudiences));
     }
   };
 
   const removeSelectedAudience = (audienceId: string) => {
-    setSelectedAudiences(prev => prev.filter(a => a.id !== audienceId));
+    const updatedAudiences = selectedAudiences.filter(a => a.id !== audienceId);
+    setSelectedAudiences(updatedAudiences);
+    // Store updated audiences in localStorage
+    localStorage.setItem('selectedAudiences', JSON.stringify(updatedAudiences));
   };
 
   const isAudienceSelected = (audienceId: string) => {

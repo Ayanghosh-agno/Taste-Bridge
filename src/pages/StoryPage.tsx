@@ -32,8 +32,8 @@ const StoryPage: React.FC = () => {
       const entities = savedEntities ? JSON.parse(savedEntities) : [];
       
       // Check for analysis data (tags)
-      const savedAnalysis = localStorage.getItem('analysisData');
-      const analysis = savedAnalysis ? JSON.parse(savedAnalysis) : null;
+      const savedAnalysisData = localStorage.getItem('analysisData');
+      const analysis = savedAnalysisData ? JSON.parse(savedAnalysisData) : null;
       
       // Check for audience data
       const savedAudiences = localStorage.getItem('selectedAudiences');
@@ -50,6 +50,13 @@ const StoryPage: React.FC = () => {
       // Check if we have minimum required data
       const hasRequiredData = entities.length > 0 && analysis && analysis.tags && analysis.tags.length > 0;
       setHasPersonaData(hasRequiredData);
+      
+      console.log('Persona data check:', {
+        entities: entities.length,
+        analysis: analysis ? 'present' : 'missing',
+        audiences: audiences.length,
+        hasRequiredData
+      });
       
     } catch (error) {
       console.error('Error checking persona data:', error);
