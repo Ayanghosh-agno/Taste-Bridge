@@ -15,6 +15,11 @@ const StoryPage: React.FC = () => {
   const [generatedContent, setGeneratedContent] = useState('');
   const [loading, setLoading] = useState(false);
 
+  // Clear generated content when content type changes
+  useEffect(() => {
+    setGeneratedContent('');
+  }, [selectedContentType]);
+
   const contentTypes = [
     { id: 'story', label: 'Cultural Story', icon: <BookOpen className="h-5 w-5" />, title: 'Your Cultural Identity' },
     { id: 'travel', label: 'Travel Plan', icon: <Map className="h-5 w-5" />, title: 'Your Ideal Cultural Getaway' },
