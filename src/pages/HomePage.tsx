@@ -11,7 +11,6 @@ const HomePage: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [selectedEntityTypes, setSelectedEntityTypes] = useState<string[]>(['urn:entity:artist', 'urn:entity:movie']);
   const [selectedEntityTypes, setSelectedEntityTypes] = useState<string[]>([]);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
   const navigate = useNavigate();
