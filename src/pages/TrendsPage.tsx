@@ -454,7 +454,9 @@ const TrendsPage: React.FC = () => {
                             ))}
                           </div>
                           {filterByLanguage(entity.properties.short_descriptions, selectedLanguage).length === 0 && selectedLanguage !== 'all' && (
+                            <div className="text-center py-4 text-gray-400">
                               No descriptions available in {selectedLanguage.toUpperCase()}
+                            </div>
                             </div>
                           )}
                         </div>
