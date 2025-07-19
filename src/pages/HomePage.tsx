@@ -407,71 +407,25 @@ const HomePage: React.FC = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
-                            onClick={() => toggleCategory(category.name)}
-                            className={`group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 ${
-                              isSelected
-                                ? 'border-purple-400 bg-gradient-to-br from-purple-500/20 to-pink-500/20 shadow-xl shadow-purple-500/25'
-                                : 'border-gray-600 bg-gray-700/30 hover:border-gray-500 hover:bg-gray-600/40'
-                            }`}
+                            className="group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 border-gray-600 bg-gray-700/30 hover:border-gray-500 hover:bg-gray-600/40 cursor-default"
                           >
-                            {isSelected && (
-                              <motion.div
-                                initial={{ scale: 0, rotate: -180 }}
-                                animate={{ scale: 1, rotate: 0 }}
-                                className="absolute -top-3 -right-3 w-8 h-8 bg-gradient-to-r from-green-400 to-emerald-500 rounded-full flex items-center justify-center shadow-lg"
-                              >
-                                <span className="text-white text-sm font-bold">✓</span>
-                              </motion.div>
-                            )}
-                            
                             <div className="text-center">
                               <motion.div 
                                 className="text-4xl mb-3 group-hover:scale-110 transition-transform duration-200"
-                                animate={isSelected ? { scale: [1, 1.2, 1] } : {}}
-                                transition={{ duration: 0.5 }}
                               >
                                 {category.icon}
                               </motion.div>
-                              <div className={`font-bold text-lg mb-1 ${
-                                isSelected ? 'text-purple-200' : 'text-white'
-                              }`}>
+                              <div className="font-bold text-lg mb-1 text-white">
                                 {category.name}
                               </div>
                               <div className="text-xs text-gray-400">
                                 {typeCount} type{typeCount !== 1 ? 's' : ''}
                               </div>
                             </div>
-                            
-                            {/* Animated background */}
-                            {isSelected && (
-                              <motion.div
-                                initial={{ opacity: 0 }}
-                                animate={{ opacity: 1 }}
-                               className={`absolute inset-0 bg-gradient-to-r ${category.color} opacity-10 rounded-2xl -z-10`}
-                              />
-                            )}
                           </motion.button>
                         );
                       })}
                     </div>
-                    
-                    {/* Selected Categories Summary */}
-                    {selectedCategories.length > 0 && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className="bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-400/20 rounded-2xl p-4 mb-6"
-                      >
-                        <div className="text-center">
-                          <div className="text-purple-200 font-semibold mb-2">
-                            🎯 Active Categories: {selectedCategories.join(', ')}
-                          </div>
-                          <div className="text-sm text-gray-300">
-                            Including {selectedEntityTypes.length} specific types for personalized discovery
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
                   </div>
                 ) : (
                   /* Individual Types View */
