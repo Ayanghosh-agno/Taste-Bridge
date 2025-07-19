@@ -822,7 +822,7 @@ Discover more at: https://tastebridge.app
             transition={{ duration: 0.6, delay: 0.3 }}
             className="mb-16"
           >
-            <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">🧬 Your Taste Graph</h2>
+            <h2 className="text-3xl font-bold text-white mb-8 text-center">🧬 Your Taste Graph</h2>
             <div className="bg-white/90 backdrop-blur-md rounded-3xl p-8 shadow-xl">
               <div className="text-center mb-8">
                 <p className="text-lg text-gray-600 mb-6">
@@ -865,7 +865,7 @@ Discover more at: https://tastebridge.app
             transition={{ duration: 0.6, delay: 0.4 }}
             className="mb-16"
           >
-            <h2 className="text-3xl font-bold text-gray-800 mb-12 text-center">🔍 Discoveries Based on Your Taste</h2>
+            <h2 className="text-3xl font-bold text-white mb-12 text-center">🔍 Discoveries Based on Your Taste</h2>
             
             {loadingInsights ? (
               <div className="text-center py-20">
@@ -914,7 +914,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.45 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">🎯 Target Audience Explorer</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">🎯 Target Audience Explorer</h2>
           <p className="text-lg text-gray-600 text-center mb-12">
             Discover and select audience segments that match your cultural profile
           </p>
