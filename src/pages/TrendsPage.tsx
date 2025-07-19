@@ -160,13 +160,13 @@ const TrendsPage: React.FC = () => {
         </motion.div>
 
         {trendsData && (
-          <div className="grid lg:grid-cols-3 gap-8">
+          <div>
             {/* Trending Entities */}
             <motion.div
               initial={{ opacity: 0, x: -30 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="lg:col-span-2 bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/50"
+              className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/50 mb-8"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center">
@@ -523,41 +523,6 @@ const TrendsPage: React.FC = () => {
               </div>
             </motion.div>
 
-            {/* Chart */}
-            <motion.div
-              initial={{ opacity: 0, x: 30 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-gray-800/30 backdrop-blur-xl rounded-3xl p-8 border border-gray-700/50"
-            >
-              <div className="flex items-center mb-6">
-                <div className="p-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl mr-4">
-                  <BarChart3 className="h-6 w-6 text-white" />
-                </div>
-                <div>
-                  <h3 className="text-2xl font-bold text-white">
-                    {selectedEntity ? `${selectedEntity.name} Trend` : 'Weekly Activity'}
-                  </h3>
-                  {selectedEntity && (
-                    <p className="text-gray-400 text-sm">Click on entities to see their trends</p>
-                  )}
-                </div>
-              </div>
-              
-              {loadingEntityTrend ? (
-                <div className="h-64 flex items-center justify-center">
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full"
-                  />
-                </div>
-              ) : (
-                <>
-                <TrendChart data={entityTrendData || trendsData?.chartData || []} />
-                </>
-              )}
-            </motion.div>
           </div>
         )}
 
