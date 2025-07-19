@@ -760,7 +760,7 @@ class QlooService {
       
       const params = new URLSearchParams();
       params.append('filter.audience.types', audienceType);
-      params.append('filter.popularity.min', '0.3');
+      //params.append('filter.popularity.min', '0.3');
       
       // Add entity IDs as signal
       entityIds.forEach(entityId => {
