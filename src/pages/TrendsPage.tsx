@@ -304,7 +304,9 @@ const TrendsPage: React.FC = () => {
                               <BarChart3 className="h-4 w-4 text-blue-400" />
                               <span className="text-blue-400 font-semibold text-sm">Description</span>
                             </div>
-                            <p className="text-gray-300 text-sm leading-relaxed">{entity.properties.description}</p>
+                            <div className="text-gray-300 text-sm leading-relaxed whitespace-pre-wrap break-words">
+                              {entity.properties.description}
+                            </div>
                           </div>
                         )}
                         
