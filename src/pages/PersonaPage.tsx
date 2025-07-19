@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { User, Brain, TrendingUp, Globe, X, MapPin, Film, Music, BookOpen, Download, Share2, RefreshCw, ChevronLeft, ChevronRight, Search, Star, Plus, Check } from 'lucide-react';
+import { User, Brain, TrendingUp, Globe, X, MapPin, Film, Music, BookOpen, Download, Share2, RefreshCw, ChevronLeft, ChevronRight, Search, Star, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 
 const PersonaPage: React.FC = () => {
@@ -36,6 +36,15 @@ const PersonaPage: React.FC = () => {
   // Export and share state
   const [exportSuccess, setExportSuccess] = useState(false);
   const [shareSuccess, setShareSuccess] = useState(false);
+
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    profile: true,
+    summary: true,
+    graph: false,
+    audiences: false,
+    destinations: false,
+    trends: false
+  });
 
   useEffect(() => {
     const savedTastes = localStorage.getItem('userTastes');
@@ -441,6 +450,40 @@ Discover more at: https://tastebridge.app
       }
     }
   };
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  const SectionHeader = ({ title, icon, section, children }: { 
+    title: string; 
+    icon: React.ReactNode; 
+    section: string;
+    children?: React.ReactNode;
+  }) => (
+    <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center">
+        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-orange-500 rounded-lg mr-3">
+          {icon}
+        </div>
+        <h2 className="text-xl md:text-2xl font-semibold text-gray-800">{title}</h2>
+      </div>
+      <button
+        onClick={() => toggleSection(section)}
+        className="md:hidden p-2 text-gray-600 hover:text-gray-800 transition-colors"
+      >
+        {expandedSections[section] ? (
+          <ChevronUp className="h-5 w-5" />
+        ) : (
+          <ChevronDown className="h-5 w-5" />
+        )}
+      </button>
+      {children}
+    </div>
+  );
 
   const formatContent = (content: string) => {
     if (!content) return null;

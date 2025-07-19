@@ -36,12 +36,9 @@ const GemmaSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
   };
 
   return (
-    <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8">
-      <div className="flex items-center mb-6">
-        <div className="flex items-center justify-center w-10 h-10 bg-gradient-to-r from-purple-500 to-orange-500 rounded-lg mr-3">
-          <Brain className="h-5 w-5 text-white" />
-        </div>
-        <h4 className="text-lg font-semibold text-white">Your Cultural Identity</h4>
+    <div>
+      <div className="flex items-center mb-4 md:mb-6">
+        <h4 className="text-base md:text-lg font-semibold text-white">Your Cultural Identity</h4>
         {typing && (
           <motion.div
             animate={{ opacity: [1, 0, 1] }}
@@ -59,7 +56,7 @@ const GemmaSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
         transition={{ duration: 0.5 }}
         className="prose prose-invert max-w-none"
       >
-        <p className="text-gray-300 leading-relaxed text-lg">
+        <p className="text-gray-300 leading-relaxed text-sm md:text-lg">
           {summary}
           {typing && (
             <motion.span
@@ -76,9 +73,9 @@ const GemmaSummary: React.FC<WatsonXSummaryProps> = ({ personaData }) => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.3 }}
-          className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-400/20 rounded-xl"
+          className="mt-4 md:mt-6 p-3 md:p-4 bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-400/20 rounded-xl"
         >
-          <p className="text-purple-300 text-sm font-medium">
+          <p className="text-purple-300 text-xs md:text-sm font-medium">
             ✨ This analysis was generated using Google Gemma AI based on your cultural preferences and taste patterns.
           </p>
         </motion.div>

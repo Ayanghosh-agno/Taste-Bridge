@@ -13,8 +13,9 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
     if (!personaData || !svgRef.current) return;
 
     const svg = d3.select(svgRef.current);
-    const width = 600;
-    const height = 400;
+    const container = svgRef.current.parentElement;
+    const width = container ? Math.min(container.clientWidth - 32, 600) : 600;
+    const height = Math.min(width * 0.67, 400);
     
     svg.selectAll("*").remove();
     
@@ -136,17 +137,16 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.8 }}
-      className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
     >
       <div className="text-center">
         <svg
           ref={svgRef}
           width="100%"
-          height="400"
-          viewBox="0 0 600 400"
+          height="300"
+          viewBox="0 0 600 300"
           className="border border-gray-700 rounded-xl bg-gray-900/30"
         />
-        <p className="text-gray-400 mt-4">
+        <p className="text-gray-400 mt-4 text-xs md:text-sm">
           Interactive cultural network - drag nodes to explore connections
         </p>
       </div>

@@ -9,19 +9,19 @@ interface TasteProfileProps {
 
 const TasteProfile: React.FC<TasteProfileProps> = ({ userTastes, personaData }) => {
   return (
-    <div className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8">
-      <div className="grid md:grid-cols-2 gap-8">
+    <div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
         {/* User Input */}
         <div>
-          <h4 className="text-lg font-semibold text-white mb-4">Your Tastes</h4>
-          <div className="bg-gray-700/30 rounded-xl p-4">
-            <p className="text-gray-300">{userTastes}</p>
+          <h4 className="text-base md:text-lg font-semibold text-white mb-4">Your Tastes</h4>
+          <div className="bg-gray-700/30 rounded-xl p-3 md:p-4">
+            <p className="text-gray-300 text-sm md:text-base">{userTastes}</p>
           </div>
         </div>
 
         {/* Matched Entities */}
         <div>
-          <h4 className="text-lg font-semibold text-white mb-4">Matched Entities</h4>
+          <h4 className="text-base md:text-lg font-semibold text-white mb-4">Matched Entities</h4>
           <div className="space-y-3">
             {personaData?.entities?.map((entity: any, index: number) => (
               <motion.div
@@ -29,7 +29,7 @@ const TasteProfile: React.FC<TasteProfileProps> = ({ userTastes, personaData }) 
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.4, delay: index * 0.1 }}
-                className="flex items-center justify-between p-3 bg-gray-700/30 rounded-lg"
+                className="flex items-center justify-between p-2 md:p-3 bg-gray-700/30 rounded-lg"
               >
                 <div className="flex items-center gap-3">
                   {entity.image ? (
@@ -39,15 +39,15 @@ const TasteProfile: React.FC<TasteProfileProps> = ({ userTastes, personaData }) 
                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-600"
                     />
                   ) : (
-                    <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center border-2 border-gray-600">
-                      <span className="text-white font-bold text-lg">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center border-2 border-gray-600">
+                      <span className="text-white font-bold text-sm md:text-lg">
                         {entity.name.charAt(0)}
                       </span>
                     </div>
                   )}
-                  <span className="text-white font-medium">{entity.name}</span>
+                  <span className="text-white font-medium text-sm md:text-base">{entity.name}</span>
                   {entity.type && (
-                    <span className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
+                    <span className="hidden sm:inline px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full">
                       {entity.type.replace('urn:entity:', '')}
                     </span>
                   )}
@@ -68,16 +68,16 @@ const TasteProfile: React.FC<TasteProfileProps> = ({ userTastes, personaData }) 
       <div className="mt-8">
         <div className="flex items-center mb-4">
           <Tag className="h-5 w-5 text-purple-400 mr-2" />
-          <h4 className="text-lg font-semibold text-white">Cultural Tags</h4>
+          <h4 className="text-base md:text-lg font-semibold text-white">Cultural Tags</h4>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-2 md:gap-3">
           {personaData?.tags?.map((tag: string, index: number) => (
             <motion.span
               key={tag}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.3, delay: index * 0.05 }}
-              className="px-4 py-2 bg-gradient-to-r from-purple-500/20 to-orange-500/20 border border-purple-400/30 rounded-full text-purple-300 font-medium hover:scale-105 transition-transform duration-200"
+              className="px-3 md:px-4 py-1 md:py-2 bg-gradient-to-r from-purple-500/20 to-orange-500/20 border border-purple-400/30 rounded-full text-purple-300 font-medium hover:scale-105 transition-transform duration-200 text-sm md:text-base"
             >
               {tag}
             </motion.span>
