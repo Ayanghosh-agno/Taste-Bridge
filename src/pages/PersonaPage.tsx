@@ -458,14 +458,14 @@ Discover more at: https://tastebridge.app
       } else if (trimmedLine.startsWith('## ')) {
         // Main heading
         formattedElements.push(
-          <h2 key={index} className="text-2xl font-bold text-gray-800 mb-4 mt-6 first:mt-0">
+          <h2 key={index} className="text-2xl font-bold text-white mb-4 mt-6 first:mt-0">
             {trimmedLine.replace('## ', '')}
           </h2>
         );
       } else if (trimmedLine.startsWith('### ')) {
         // Sub heading
         formattedElements.push(
-          <h3 key={index} className="text-xl font-semibold text-gray-800 mb-3 mt-5">
+          <h3 key={index} className="text-xl font-semibold text-white mb-3 mt-5">
             {trimmedLine.replace('### ', '')}
           </h3>
         );
@@ -541,7 +541,7 @@ Discover more at: https://tastebridge.app
             <div className="p-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-xl text-gray-800">
               {icon}
             </div>
-            <h3 className="text-2xl font-bold text-gray-800">{title}</h3>
+            <h3 className="text-2xl font-bold text-white">{title}</h3>
           </div>
           <div className="flex gap-2">
             <button
@@ -618,11 +618,11 @@ Discover more at: https://tastebridge.app
     return (
       <div className="min-h-screen bg-gradient-to-br from-yellow-100 via-orange-100 to-red-100 flex items-center justify-center">
         <div className="text-center bg-white/90 backdrop-blur-md rounded-3xl p-12 shadow-2xl">
-          <h2 className="text-3xl font-bold text-gray-800 mb-4">No persona data found</h2>
+          <h2 className="text-3xl font-bold text-white mb-4">No persona data found</h2>
           <p className="text-gray-600 mb-8">Please start by building your persona on the homepage.</p>
           <button
             onClick={() => navigate('/')}
-            className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-gray-800 rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
+            className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300"
           >
             Build My Persona
           </button>
@@ -647,7 +647,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6 }}
           className="text-center mb-12 relative z-10"
         >
-          <h1 className="text-5xl font-bold text-gray-800 mb-4">Your Cultural Persona</h1>
+          <h1 className="text-5xl font-bold text-white mb-4">Your Cultural Persona</h1>
           <p className="text-xl text-gray-300">Discover the story behind your tastes</p>
         </motion.div>
 
@@ -658,7 +658,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.2 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">Your Selected Identities</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">Your Selected Identities</h2>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {selectedEntities.map((entity, index) => (
               <motion.div
@@ -722,7 +722,7 @@ Discover more at: https://tastebridge.app
           transition={{ duration: 0.6, delay: 0.25 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-gray-800 mb-8 text-center">➕ Add More to Your Identity</h2>
+          <h2 className="text-3xl font-bold text-white mb-8 text-center">➕ Add More to Your Identity</h2>
           <div className="max-w-2xl mx-auto">
             <div className="relative">
               <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -1171,7 +1171,7 @@ Discover more at: https://tastebridge.app
                 <button
                   onClick={generateCulturalIdentity}
                   disabled={!selectedEntities.length || !analysisData?.tags}
-                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-gray-800 rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-xl font-semibold hover:shadow-lg transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Generate Cultural Identity
                 </button>
