@@ -336,8 +336,7 @@ const HomePage: React.FC = () => {
                   <div className="absolute -top-1 -right-1 w-3 h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full animate-pulse"></div>
                 </div>
                 <div className="text-left">
-                  <div className="font-bold text-lg">Customize Your Discovery</div>
-                  <div className="font-bold text-lg">Choose Your Interests</div>
+                  <div className="font-bold text-lg">Explore Content Categories</div>
                   <div className="text-sm text-gray-300">Choose what you want to explore</div>
                 </div>
                 <div className="flex items-center gap-2">
