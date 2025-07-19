@@ -591,11 +591,12 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                               e.stopPropagation();
                               handleDestinationSelect(destination);
                             }}
-                            className="flex-1 px-5 py-3 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-600 hover:via-purple-700 hover:to-pink-600 text-white font-bold rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-purple-500/30 hover:scale-105 active:scale-95 relative overflow-hidden group/btn"
+                            className="flex-1 px-6 py-4 bg-gradient-to-r from-purple-500 via-purple-600 to-pink-500 hover:from-purple-600 hover:via-purple-700 hover:to-pink-600 text-white font-bold rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/40 hover:scale-[1.02] active:scale-[0.98] relative overflow-hidden group/btn border border-purple-400/20"
                           >
-                            <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+                            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 ease-out"></div>
                             <span className="relative z-10">
-                            Select Destination
+                              ✈️ Select Destination
                             </span>
                           </button>
                           
@@ -607,12 +608,13 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
                                 const mapUrl = `https://www.google.com/maps/search/?api=1&query=${lat},${lon}&zoom=12`;
                                 window.open(mapUrl, '_blank');
                               }}
-                              className="px-5 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-xl transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/30 hover:scale-105 active:scale-95 flex items-center gap-2 relative overflow-hidden group/btn"
+                              className="px-6 py-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold rounded-2xl transition-all duration-300 hover:shadow-2xl hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98] flex items-center gap-2 relative overflow-hidden group/btn border border-blue-400/20 min-w-[120px] justify-center"
                               title="View on Google Maps"
                             >
-                              <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300"></div>
-                              <MapPin className="h-4 w-4 relative z-10" />
-                              <span className="relative z-10">Map</span>
+                              <div className="absolute inset-0 bg-gradient-to-r from-white/30 via-white/10 to-transparent opacity-0 group-hover/btn:opacity-100 transition-opacity duration-500"></div>
+                              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/5 to-transparent translate-x-[-100%] group-hover/btn:translate-x-[100%] transition-transform duration-700 ease-out"></div>
+                              <MapPin className="h-5 w-5 relative z-10 group-hover/btn:scale-110 transition-transform duration-200" />
+                              <span className="relative z-10">🗺️ Map</span>
                             </button>
                           )}
                         </div>
