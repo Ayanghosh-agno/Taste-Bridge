@@ -74,11 +74,11 @@ const StoryPage: React.FC = () => {
     }
   }, [selectedContentType, hasPersonaData, selectedEntities]);
   
-  const fetchRecommendedDestinations = async () => {
+  const fetchRecommendedDestinations = async (location?: { lat: number; lon: number }) => {
     setLoadingRecommendations(true);
     try {
       const entityIds = selectedEntities.map(entity => entity.entity_id);
-      const destinations = await qlooService.getRecommendedDestinations(entityIds);
+      const destinations = await qlooService.getRecommendedDestinations(entityIds, location);
       setRecommendedDestinations(destinations);
     } catch (error) {
       console.error('Error fetching recommended destinations:', error);
@@ -112,6 +112,11 @@ const StoryPage: React.FC = () => {
     setSearchDestinationInput('');
     setShowDestinationSuggestions(false);
     setSearchDestinationResults([]);
+    
+    // If this destination has location data, fetch new recommendations
+    if (destination.location && hasPersonaData && selectedEntities.length > 0) {
+      fetchRecommendedDestinations(destination.location);
+    }
   };
 
   const checkPersonaData = () => {
@@ -650,7 +655,7 @@ End each day with a cultural insight about ${destinationName}. Make it inspiring
 
                 {/* Search Suggestions */}
                 {showDestinationSuggestions && (searchDestinationResults.length > 0 || searchingDestinations) && (
-                  <div className="absolute z-50 w-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
+                  <div className="absolute z-[9999] w-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-xl shadow-2xl max-h-60 overflow-y-auto">
                     {searchingDestinations ? (
                       <div className="p-4 text-center">
                         <div className="animate-spin w-6 h-6 border-2 border-orange-400 border-t-transparent rounded-full mx-auto"></div>

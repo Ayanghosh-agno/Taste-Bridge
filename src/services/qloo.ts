@@ -388,7 +388,7 @@ class QlooService {
     }
   }
 
-  async getRecommendedDestinations(entityIds: string[]): Promise<QlooEntity[]> {
+  async getRecommendedDestinations(entityIds: string[], location?: { lat: number; lon: number }): Promise<QlooEntity[]> {
     if (!entityIds || entityIds.length === 0) {
       console.log('No entity IDs provided for destination recommendations');
       return [];
@@ -396,18 +396,24 @@ class QlooService {
 
     try {
       const entityIdsParam = entityIds.join(',');
-      const params = new URLSearchParams({
+      const baseParams: Record<string, string> = {
         'entity_ids': entityIdsParam,
-        'type': 'urn:entity:destination',
+        'type': 'urn:entity:locality',
         'bias.content_based': '0.5',
-        'filter.radius': '10',
         'operator.filter.tags': 'union',
         'page': '1',
         'sort_by': 'affinity',
         'take': '20'
-      });
+      };
       
-      console.log(`Getting destination recommendations for entities: ${entityIdsParam}`);
+      // Add location filter if provided
+      if (location) {
+        baseParams['filter.location'] = `${location.lat},${location.lon}`;
+      }
+      
+      const params = new URLSearchParams(baseParams);
+      
+      console.log(`Getting destination recommendations for entities: ${entityIdsParam}${location ? ` near ${location.lat},${location.lon}` : ''}`);
       
       const response: QlooApiResponse<QlooEntitiesResults> = await this.makeRequest(`/recommendations?${params.toString()}`);
       
