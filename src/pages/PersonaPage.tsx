@@ -915,7 +915,7 @@ Discover more at: https://tastebridge.app
           className="mb-16"
         >
           <h2 className="text-3xl font-bold text-white mb-8 text-center">🎯 Target Audience Explorer</h2>
-          <p className="text-lg text-gray-600 text-center mb-12">
+          <p className="text-lg text-white text-center mb-12">
             Discover and select audience segments that match your cultural profile
           </p>
           
