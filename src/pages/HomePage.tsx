@@ -13,6 +13,7 @@ const HomePage: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [selectedEntityTypes, setSelectedEntityTypes] = useState<string[]>([]);
   const [showTypeSelector, setShowTypeSelector] = useState(false);
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
   const navigate = useNavigate();
 
   const entityTypes = [
