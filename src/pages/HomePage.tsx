@@ -23,6 +23,19 @@ const HomePage: React.FC = () => {
       if (savedEntities) {
         const entities = JSON.parse(savedEntities);
         setSelectedEntities(entities);
+        
+        // Auto-populate entity types and categories based on loaded entities
+        const entityTypes = entities.map((entity: any) => entity.type || entity.types?.[0]).filter(Boolean);
+        const uniqueEntityTypes = [...new Set(entityTypes)];
+        setSelectedEntityTypes(uniqueEntityTypes);
+        
+        // Auto-populate categories based on entity types
+        const categories = uniqueEntityTypes.map(entityType => {
+          const matchingType = entityTypes.find(type => type.value === entityType);
+          return matchingType?.category;
+        }).filter(Boolean);
+        const uniqueCategories = [...new Set(categories)];
+        setSelectedCategories(uniqueCategories);
       }
     } catch (error) {
       console.error('Error loading foundEntities from localStorage:', error);
