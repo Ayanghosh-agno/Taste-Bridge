@@ -866,18 +866,21 @@ const PersonaPage: React.FC = () => {
                 <button 
                   onClick={async () => {
                     if (analysisData?.tags) {
+                     const button = event.target as HTMLButtonElement;
+                     const originalText = button.textContent;
+                     const originalStyle = button.style.cssText;
+                     
+                     button.textContent = '✓ Applied!';
+                     button.style.cssText = 'background: linear-gradient(to right, #10b981, #059669) !important; color: white !important;';
+                     button.disabled = true;
+                     
                       await generateInsights(analysisData.tags);
-                      // Show success feedback
-                      const button = document.activeElement as HTMLButtonElement;
-                      if (button) {
-                        const originalText = button.textContent;
-                        button.textContent = '✓ Applied!';
-                        button.style.background = 'linear-gradient(to right, #10b981, #059669)';
-                        setTimeout(() => {
-                          button.textContent = originalText;
-                          button.style.background = '';
-                        }, 2000);
-                      }
+                     
+                     setTimeout(() => {
+                       button.textContent = originalText;
+                       button.style.cssText = originalStyle;
+                       button.disabled = false;
+                     }, 2000);
                     }
                   }}
                   disabled={loadingInsights}
