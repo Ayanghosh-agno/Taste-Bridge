@@ -594,8 +594,8 @@ Discover more at: https://tastebridge.app
                 <button className="w-full py-2 bg-gradient-to-r from-purple-500 to-pink-500 text-white rounded-lg font-medium hover:shadow-lg transition-all duration-200">
                   Add to My World
                 </button>
-            <h1 className="text-5xl font-bold text-white mb-4">Your Cultural Persona</h1>
-            <p className="text-xl text-gray-300">Discover the story behind your tastes</p>
+              </motion.div>
+            ))}
           </motion.div>
         </div>
       </div>
