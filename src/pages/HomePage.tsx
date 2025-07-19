@@ -324,7 +324,7 @@ const HomePage: React.FC = () => {
   ];
 
   return (
-    <div className="pt-16 min-h-screen bg-gradient-to-br from-gray-900 via-purple-900/20 to-gray-900">
+    <div className="pt-16 min-h-screen bg-gray-900">
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse"></div>
@@ -357,12 +357,12 @@ const HomePage: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.15 }}
-            className="max-w-4xl mx-auto mb-6"
+            className="max-w-4xl mx-auto mb-8"
           >
             <div className="text-center mb-6">
               <button
                 onClick={() => setShowTypeSelector(!showTypeSelector)}
-                className="group inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-gray-800/60 to-gray-700/60 backdrop-blur-md border border-gray-600/50 rounded-3xl text-white hover:from-gray-700/70 hover:to-gray-600/70 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
+                className="group inline-flex items-center gap-3 px-8 py-4 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl text-white hover:bg-gray-700/50 transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-105"
               >
                 <div className="relative">
                   <span className="text-2xl group-hover:scale-110 transition-transform duration-200">🎯</span>
@@ -395,11 +395,11 @@ const HomePage: React.FC = () => {
                 animate={{ opacity: 1, height: 'auto', scale: 1 }}
                 exit={{ opacity: 0, height: 0, scale: 0.95 }}
                 transition={{ duration: 0.4, ease: "easeOut" }}
-                className="bg-gradient-to-br from-gray-800/70 to-gray-900/70 backdrop-blur-xl border border-gray-600/30 rounded-3xl p-8 mb-6 shadow-2xl"
+                className="bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl p-8 mb-6 shadow-2xl"
               >
                 {/* View Mode Toggle */}
                 <div className="flex justify-center mb-8">
-                  <div className="bg-gray-700/50 rounded-2xl p-1 border border-gray-600/30">
+                  <div className="bg-gray-700/50 rounded-xl p-1 border border-gray-600">
                     <button
                       onClick={() => setViewMode('categories')}
                       className={`px-6 py-3 rounded-xl font-medium transition-all duration-300 ${
@@ -440,7 +440,7 @@ const HomePage: React.FC = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
-                            className="group relative p-6 rounded-2xl border-2 transition-all duration-300 hover:scale-105 border-gray-600 bg-gray-700/30 hover:border-gray-500 hover:bg-gray-600/40 cursor-default"
+                            className="group relative p-6 rounded-xl border border-gray-600 transition-all duration-300 hover:scale-105 bg-gray-700/30 hover:border-gray-500 hover:bg-gray-600/40 cursor-default"
                           >
                             <div className="text-center">
                               <motion.div 
@@ -477,9 +477,9 @@ const HomePage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3, delay: index * 0.03 }}
                             onClick={() => toggleEntityType(entityType.value)}
-                            className={`group relative p-4 rounded-xl border-2 transition-all duration-200 hover:scale-105 ${
+                            className={`group relative p-4 rounded-xl border transition-all duration-200 hover:scale-105 ${
                               isSelected
-                                ? 'border-purple-400 bg-purple-500/20 shadow-lg shadow-purple-500/25'
+                                ? 'border-purple-400 bg-purple-500/20'
                                 : 'border-gray-600 bg-gray-700/30 hover:border-gray-500'
                             }`}
                           >
@@ -528,7 +528,7 @@ const HomePage: React.FC = () => {
                   transition={{ delay: 0.3 }}
                   className="text-center"
                 >
-                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/40 rounded-xl border border-gray-600/30">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/40 rounded-xl border border-gray-600">
                     <span className="text-2xl">🎯</span>
                     <span className="text-gray-300 text-sm">
                       {selectedEntityTypes.length === 0 
@@ -559,13 +559,13 @@ const HomePage: React.FC = () => {
                 }}
                 placeholder="Enter your favorite artists, foods, cities, books, movies..."
                 onFocus={() => searchInput && setShowSuggestions(true)}
-                className="w-full pl-12 pr-4 py-4 bg-gray-800/50 backdrop-blur-md border border-gray-700 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
+                className="w-full pl-12 pr-4 py-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
               />
             </div>
 
             {/* Search Suggestions */}
             {showSuggestions && (searchResults.length > 0 || searching) && (
-              <div className="absolute z-50 w-full mt-2 bg-gray-800/95 backdrop-blur-md border border-gray-600 rounded-2xl shadow-2xl max-h-80 overflow-y-auto">
+              <div className="absolute z-50 w-full mt-2 bg-gray-800 border border-gray-600 rounded-xl shadow-2xl max-h-80 overflow-y-auto">
                 {searching ? (
                   <div className="p-6 text-center">
                     <div className="animate-spin w-8 h-8 border-2 border-purple-400 border-t-transparent rounded-full mx-auto"></div>
@@ -678,9 +678,9 @@ const HomePage: React.FC = () => {
             <button
               onClick={handleBuildPersona}
               disabled={selectedEntities.length === 0 || isSearching}
-              className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-2xl font-semibold text-white transition-all duration-300 hover:shadow-2xl hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-2xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
               <span className="relative z-10">
                 {isSearching ? 'Analyzing...' : 'Build My Persona'}
               </span>
@@ -701,7 +701,7 @@ const HomePage: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.8 + index * 0.1 }}
-              className="group p-6 bg-gray-800/30 backdrop-blur-md rounded-2xl border border-gray-700 hover:border-purple-400/50 transition-all duration-300"
+              className="group p-6 bg-gray-800/50 backdrop-blur-md rounded-2xl border border-gray-700 hover:border-purple-400/50 transition-all duration-300"
             >
               <div className="flex items-center justify-center w-12 h-12 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl mb-4 group-hover:scale-110 transition-transform duration-300">
                 {feature.icon}
