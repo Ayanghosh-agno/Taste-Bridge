@@ -2,8 +2,8 @@
 
 <div align="center">
   <img src="https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg" alt="TasteBridge Banner" width="800" height="300" style="object-fit: cover; border-radius: 10px;">
-  
-  [![Netlify Status](https://api.netlify.com/api/v1/badges/your-site-id/deploy-status)](https://app.netlify.com/sites/celadon-taffy-213814/deploys)
+
+  [![Netlify Status](https://api.netlify.com/api/v1/badges/08e27f12-adda-4e87-88d1-36fb22fce8cf/deploy-status)](https://app.netlify.com/projects/celadon-taffy-213814/deploys)
   [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
   [![TypeScript](https://img.shields.io/badge/TypeScript-5.5.3-blue.svg)](https://www.typescriptlang.org/)
   [![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4.1-38B2AC.svg)](https://tailwindcss.com/)
