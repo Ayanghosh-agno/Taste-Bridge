@@ -618,7 +618,7 @@ Discover more at: https://tastebridge.app
     return (
       <div className="min-h-screen bg-gray-900/95 backdrop-blur-md border-b border-gray-700 shadow-lg flex items-center justify-center">
         <div className="text-center bg-white/90 backdrop-blur-md rounded-3xl p-12 shadow-2xl">
-          <h2 className="text-3xl font-bold text-white mb-4">No persona data found</h2>
+          <h2 className="text-3xl font-bold text-gray-800 mb-4">No persona data found</h2>
           <p className="text-gray-600 mb-8">Please start by building your persona on the homepage.</p>
           <button
             onClick={() => navigate('/')}
