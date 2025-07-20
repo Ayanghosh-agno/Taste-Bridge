@@ -590,6 +590,13 @@ const InsightsPage: React.FC = () => {
                     </span>
                   </button>
                   <p className="text-gray-400 text-xs mt-2">
+                    Analyze cultural affinity patterns for {selectedEntity.name}
+                  </p>
+                </motion.div>
+              )}
+            </div>
+          </div>
+        </motion.div>
 
         {/* Entity Demographics Section - Only shows after heatmap generation */}
         {showHeatmap && selectedEntity && (
