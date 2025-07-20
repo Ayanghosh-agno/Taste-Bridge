@@ -1080,7 +1080,7 @@ class QlooService {
   async getHeatmapInsights(entityId: string, longitude: number, latitude: number, radius: number): Promise<any[]> {
     try {
       const params = new URLSearchParams({
-        'filter.type': 'urn:heatmap',
+        'filter.type': 'urn:heatmap', 
         'filter.location': `POINT(${longitude} ${latitude})`,
         'filter.location.radius': radius.toString(),
         'signal.interests.entities': entityId

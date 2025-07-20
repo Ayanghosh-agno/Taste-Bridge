@@ -1,7 +1,29 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Zap, X, Star, Settings, Play } from 'lucide-react';
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import { qlooService } from '../services/qloo';
+
+// Fix for default markers in react-leaflet
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+});
+
+// Custom marker icon
+const customIcon = new L.Icon({
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41]
+});
 
 interface HeatmapPoint {
   location: {
@@ -16,13 +38,64 @@ interface HeatmapPoint {
   };
 }
 
-interface HeatmapResponse {
-  success: boolean;
-  duration: number;
-  results: {
-    heatmap: HeatmapPoint[];
-  };
-}
+// Component to handle map clicks
+const MapClickHandler: React.FC<{ onLocationSelect: (lat: number, lng: number) => void }> = ({ onLocationSelect }) => {
+  useMapEvents({
+    click: (e) => {
+      const { lat, lng } = e.latlng;
+      onLocationSelect(lat, lng);
+    },
+  });
+  return null;
+};
+
+// Component to create heatmap circles
+const HeatmapLayer: React.FC<{ heatmapData: HeatmapPoint[] }> = ({ heatmapData }) => {
+  return (
+    <>
+      {heatmapData.map((point, index) => {
+        const intensity = point.query.affinity;
+        let color = '#3b82f6'; // Blue for low affinity
+        let fillOpacity = 0.3;
+        
+        if (intensity > 0.7) {
+          color = '#f97316'; // Orange for high affinity
+          fillOpacity = 0.7;
+        } else if (intensity > 0.4) {
+          color = '#a855f7'; // Purple for medium affinity
+          fillOpacity = 0.5;
+        }
+        
+        const radius = 3 + (intensity * 12); // Size based on affinity
+        
+        return (
+          <L.Circle
+            key={`heatmap-${index}`}
+            center={[point.location.latitude, point.location.longitude]}
+            radius={radius * 100} // Convert to meters for map display
+            pathOptions={{
+              color: color,
+              fillColor: color,
+              fillOpacity: fillOpacity,
+              weight: 2,
+              opacity: 0.8
+            }}
+          >
+            <Popup>
+              <div className="text-sm">
+                <div className="font-semibold">Affinity: {Math.round(intensity * 100)}%</div>
+                <div>Popularity: {Math.round(point.query.popularity * 100)}%</div>
+                <div className="text-xs text-gray-600 mt-1">
+                  {point.location.latitude.toFixed(4)}°, {point.location.longitude.toFixed(4)}°
+                </div>
+              </div>
+            </Popup>
+          </L.Circle>
+        );
+      })}
+    </>
+  );
+};
 
 const InsightsPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
@@ -40,189 +113,6 @@ const InsightsPage: React.FC = () => {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const [generatingHeatmap, setGeneratingHeatmap] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
-  
-  const mapRef = useRef<HTMLDivElement>(null);
-  const mapInstanceRef = useRef<any>(null);
-
-  // Initialize map when component mounts
-  useEffect(() => {
-    if (showMap && mapRef.current && !mapInstanceRef.current) {
-      initializeMap();
-    }
-  }, [showMap]);
-
-  const initializeMap = () => {
-    // Create a simple interactive map using HTML5 Canvas
-    const canvas = document.createElement('canvas');
-    canvas.width = 600;
-    canvas.height = 400;
-    canvas.style.width = '100%';
-    canvas.style.height = '400px';
-    canvas.style.border = '1px solid #374151';
-    canvas.style.borderRadius = '12px';
-    canvas.style.cursor = 'crosshair';
-    canvas.style.backgroundColor = '#1f2937';
-    
-    if (mapRef.current) {
-      mapRef.current.innerHTML = '';
-      mapRef.current.appendChild(canvas);
-    }
-    
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    
-    // Draw world map outline (simplified)
-    drawWorldMap(ctx, canvas.width, canvas.height);
-    
-    // Add click handler
-    canvas.addEventListener('click', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const x = (e.clientX - rect.left) * (canvas.width / rect.width);
-      const y = (e.clientY - rect.top) * (canvas.height / rect.height);
-      
-      // Convert canvas coordinates to lat/lng (simplified projection)
-      const lng = ((x / canvas.width) * 360) - 180;
-      const lat = 90 - ((y / canvas.height) * 180);
-      
-      setSelectedLocation({ lat, lng });
-      
-      // Redraw map with selected point
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      drawWorldMap(ctx, canvas.width, canvas.height);
-      drawSelectedPoint(ctx, x, y);
-    });
-    
-    mapInstanceRef.current = { canvas, ctx };
-  };
-
-  const drawWorldMap = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    // Draw simplified world map
-    ctx.strokeStyle = '#6b7280';
-    ctx.lineWidth = 1;
-    
-    // Draw continents (very simplified)
-    // North America
-    ctx.beginPath();
-    ctx.moveTo(width * 0.15, height * 0.25);
-    ctx.lineTo(width * 0.25, height * 0.2);
-    ctx.lineTo(width * 0.3, height * 0.35);
-    ctx.lineTo(width * 0.2, height * 0.45);
-    ctx.closePath();
-    ctx.stroke();
-    
-    // Europe
-    ctx.beginPath();
-    ctx.moveTo(width * 0.45, height * 0.2);
-    ctx.lineTo(width * 0.55, height * 0.15);
-    ctx.lineTo(width * 0.6, height * 0.3);
-    ctx.lineTo(width * 0.5, height * 0.35);
-    ctx.closePath();
-    ctx.stroke();
-    
-    // Asia
-    ctx.beginPath();
-    ctx.moveTo(width * 0.6, height * 0.15);
-    ctx.lineTo(width * 0.85, height * 0.1);
-    ctx.lineTo(width * 0.9, height * 0.4);
-    ctx.lineTo(width * 0.65, height * 0.45);
-    ctx.closePath();
-    ctx.stroke();
-    
-    // Grid lines
-    ctx.strokeStyle = '#374151';
-    ctx.lineWidth = 0.5;
-    
-    // Latitude lines
-    for (let i = 1; i < 4; i++) {
-      const y = (height / 4) * i;
-      ctx.beginPath();
-      ctx.moveTo(0, y);
-      ctx.lineTo(width, y);
-      ctx.stroke();
-    }
-    
-    // Longitude lines
-    for (let i = 1; i < 6; i++) {
-      const x = (width / 6) * i;
-      ctx.beginPath();
-      ctx.moveTo(x, 0);
-      ctx.lineTo(x, height);
-      ctx.stroke();
-    }
-  };
-
-  const drawSelectedPoint = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
-    // Draw selected location marker
-    ctx.fillStyle = '#a855f7';
-    ctx.beginPath();
-    ctx.arc(x, y, 8, 0, 2 * Math.PI);
-    ctx.fill();
-    
-    ctx.strokeStyle = '#ffffff';
-    ctx.lineWidth = 2;
-    ctx.stroke();
-    
-    // Draw radius circle
-    ctx.strokeStyle = '#a855f7';
-    ctx.lineWidth = 1;
-    ctx.setLineDash([5, 5]);
-    ctx.beginPath();
-    const radiusPixels = (radius / 100000) * 50; // Scale radius for visualization
-    ctx.arc(x, y, radiusPixels, 0, 2 * Math.PI);
-    ctx.stroke();
-    ctx.setLineDash([]);
-  };
-
-  const drawHeatmap = (ctx: CanvasRenderingContext2D, width: number, height: number) => {
-    if (!heatmapData.length) return;
-    
-    // Clear and redraw base map
-    ctx.clearRect(0, 0, width, height);
-    drawWorldMap(ctx, width, height);
-    
-    // Draw heatmap points
-    heatmapData.forEach(point => {
-      // Convert lat/lng to canvas coordinates
-      const x = ((point.location.longitude + 180) / 360) * width;
-      const y = ((90 - point.location.latitude) / 180) * height;
-      
-      // Color based on affinity
-      const intensity = point.query.affinity;
-      const alpha = Math.max(0.3, intensity);
-      
-      // Create gradient based on affinity
-      if (intensity > 0.7) {
-        ctx.fillStyle = `rgba(249, 115, 22, ${alpha})`; // Orange for high affinity
-      } else if (intensity > 0.4) {
-        ctx.fillStyle = `rgba(168, 85, 247, ${alpha})`; // Purple for medium affinity
-      } else {
-        ctx.fillStyle = `rgba(59, 130, 246, ${alpha})`; // Blue for low affinity
-      }
-      
-      // Draw point
-      ctx.beginPath();
-      const pointSize = 3 + (intensity * 8); // Size based on affinity
-      ctx.arc(x, y, pointSize, 0, 2 * Math.PI);
-      ctx.fill();
-      
-      // Add glow effect for high affinity points
-      if (intensity > 0.6) {
-        ctx.shadowColor = intensity > 0.7 ? '#f97316' : '#a855f7';
-        ctx.shadowBlur = 10;
-        ctx.beginPath();
-        ctx.arc(x, y, pointSize * 0.7, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.shadowBlur = 0;
-      }
-    });
-    
-    // Draw selected location if exists
-    if (selectedLocation) {
-      const x = ((selectedLocation.lng + 180) / 360) * width;
-      const y = ((90 - selectedLocation.lat) / 180) * height;
-      drawSelectedPoint(ctx, x, y);
-    }
-  };
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -261,6 +151,10 @@ const InsightsPage: React.FC = () => {
     setHeatmapData([]);
   };
 
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setSelectedLocation({ lat, lng });
+  };
+
   const generateHeatmap = async () => {
     if (!selectedEntity || !selectedLocation) return;
     
@@ -277,23 +171,12 @@ const InsightsPage: React.FC = () => {
       
       setHeatmapData(response);
       setShowHeatmap(true);
-      
-      // Update map with heatmap
-      if (mapInstanceRef.current) {
-        const { canvas, ctx } = mapInstanceRef.current;
-        drawHeatmap(ctx, canvas.width, canvas.height);
-      }
     } catch (error) {
       console.error('Error generating heatmap:', error);
       // Generate mock heatmap data for demonstration
       const mockData = generateMockHeatmapData();
       setHeatmapData(mockData);
       setShowHeatmap(true);
-      
-      if (mapInstanceRef.current) {
-        const { canvas, ctx } = mapInstanceRef.current;
-        drawHeatmap(ctx, canvas.width, canvas.height);
-      }
     } finally {
       setGeneratingHeatmap(false);
     }
@@ -478,10 +361,56 @@ const InsightsPage: React.FC = () => {
             <div className="space-y-6">
               {/* Map Container */}
               <div className="relative">
-                <div ref={mapRef} className="w-full h-96 bg-gray-900 rounded-xl border border-gray-700">
-                  <div className="flex items-center justify-center h-full text-gray-400">
-                    Click anywhere on the map to select a location
-                  </div>
+                <div className="w-full h-96 rounded-xl overflow-hidden border border-gray-700">
+                  <MapContainer
+                    center={[40.7128, -74.0060]} // Default to New York
+                    zoom={2}
+                    style={{ height: '100%', width: '100%' }}
+                    className="z-0"
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    
+                    <MapClickHandler onLocationSelect={handleLocationSelect} />
+                    
+                    {selectedLocation && (
+                      <Marker 
+                        position={[selectedLocation.lat, selectedLocation.lng]}
+                        icon={customIcon}
+                      >
+                        <Popup>
+                          <div className="text-sm">
+                            <div className="font-semibold">Selected Location</div>
+                            <div>Lat: {selectedLocation.lat.toFixed(4)}°</div>
+                            <div>Lng: {selectedLocation.lng.toFixed(4)}°</div>
+                            <div className="text-xs text-gray-600 mt-1">
+                              Analysis radius: {(radius / 1000).toFixed(0)}km
+                            </div>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    )}
+                    
+                    {/* Radius Circle */}
+                    {selectedLocation && (
+                      <L.Circle
+                        center={[selectedLocation.lat, selectedLocation.lng]}
+                        radius={radius}
+                        pathOptions={{
+                          color: '#a855f7',
+                          fillColor: '#a855f7',
+                          fillOpacity: 0.1,
+                          weight: 2,
+                          dashArray: '5, 5'
+                        }}
+                      />
+                    )}
+                    
+                    {/* Heatmap Layer */}
+                    {showHeatmap && <HeatmapLayer heatmapData={heatmapData} />}
+                  </MapContainer>
                 </div>
                 
                 {selectedLocation && (
@@ -525,6 +454,10 @@ const InsightsPage: React.FC = () => {
                     <span>80km</span>
                   </div>
                 </div>
+              </div>
+              
+              <div className="text-center text-gray-400 text-sm">
+                Click anywhere on the map to select a location for heatmap analysis
               </div>
             </div>
           </motion.div>
