@@ -39,7 +39,7 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
         type: 'user'
       },
       // Tag nodes (from both persona and entity tags)
-      ...allTags.slice(0, 12).map((tag: string, i: number) => ({
+      ...allTags.map((tag: string, i: number) => ({
         id: `tag-${tag}`,
         group: 1,
         radius: 8 + Math.random() * 4,
