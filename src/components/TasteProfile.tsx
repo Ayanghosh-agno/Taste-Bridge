@@ -35,7 +35,7 @@ const TasteProfile: React.FC<TasteProfileProps> = ({ userTastes, personaData }) 
                   {entity.image ? (
                     <img 
                       src={entity.image} 
-                      alt={entity.name}
+                      alt={`${entity.name} - Cultural entity match`}
                       className="w-12 h-12 rounded-lg object-cover border-2 border-gray-600"
                     />
                   ) : (

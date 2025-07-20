@@ -271,11 +271,11 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
     node.append('title')
       .text((d: any) => {
         if (d.type === 'entity') {
-          return `${d.label}\nType: ${d.entityType}\nInfluence: ${d.radius.toFixed(1)}\n\nClick and drag to move\nDouble-click to pin/unpin`;
+          return `${d.label}\nType: ${d.entityType}\nInfluence: ${d.radius.toFixed(1)}\n\nClick for details, drag to move, double-click to pin/unpin`;
         } else if (d.type === 'tag') {
-          return `Cultural Tag: ${d.label}\nConnects different domains\n\nClick and drag to move\nDouble-click to pin/unpin`;
+          return `Cultural Tag: ${d.label}\nConnects different domains\n\nClick for details, drag to move, double-click to pin/unpin`;
         } else if (d.type === 'user') {
-          return `Your Cultural Center\nConnected to ${links.filter((l: any) => l.source === 'center' || l.target === 'center').length} elements\n\nClick and drag to move`;
+          return `Your Cultural Center\nConnected to ${links.filter((l: any) => l.source === 'center' || l.target === 'center').length} elements\n\nClick for details, drag to move`;
         }
         return d.label;
       });
@@ -364,6 +364,8 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
           width="100%"
           height="350"
           viewBox="0 0 700 350"
+          role="img"
+          aria-label="Interactive cultural network graph showing connections between your preferences, entities, and cultural tags"
           className="border border-gray-700 rounded-xl bg-gray-900/30 cursor-grab active:cursor-grabbing"
         />
       </div>

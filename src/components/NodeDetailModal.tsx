@@ -25,7 +25,7 @@ const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose }) => {
           <div className="flex justify-center">
             <img 
               src={properties.image.url} 
-              alt={node.label}
+              alt={`${node.label} - ${node.entityType?.replace('_', ' ') || 'Cultural entity'} image`}
               className="w-32 h-32 rounded-xl object-cover border-2 border-gray-600 shadow-lg"
             />
           </div>
@@ -310,6 +310,7 @@ const NodeDetailModal: React.FC<NodeDetailModalProps> = ({ node, onClose }) => {
             </div>
             <button
               onClick={onClose}
+              aria-label="Close entity details modal"
               className="p-2 text-gray-400 hover:text-white hover:bg-gray-700 rounded-lg transition-colors duration-200"
             >
               <X className="h-5 w-5" />

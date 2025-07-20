@@ -183,11 +183,14 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                   }}
                   onFocus={() => profile1 && setShowSuggestions1(true)}
                   placeholder="Search for artists, movies, books, people..."
+                  id="profile1Input"
+                  aria-label="Search for first profile to compare"
                   className="w-full pl-12 pr-12 py-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 {selectedEntity1 && (
                   <button
                     onClick={() => clearSelection(1)}
+                    aria-label="Clear first profile selection"
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   >
                     <X className="h-5 w-5" />
@@ -202,7 +205,7 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                     {selectedEntity1.properties?.image?.url && (
                       <img 
                         src={selectedEntity1.properties.image.url} 
-                        alt={selectedEntity1.name}
+                        alt={`${selectedEntity1.name} - First profile for comparison`}
                         className="w-12 h-12 rounded-lg object-cover"
                       />
                     )}
@@ -227,13 +230,14 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                       <button
                         key={entity.entity_id || index}
                         onClick={() => handleEntitySelect(entity, 1)}
+                        aria-label={`Select ${entity.name} as first profile for comparison`}
                         className="w-full p-4 text-left hover:bg-gray-700 transition-colors duration-200 border-b border-gray-700 last:border-b-0"
                       >
                         <div className="flex items-center gap-3">
                           {entity.properties?.image?.url ? (
                             <img 
                               src={entity.properties.image.url} 
-                              alt={entity.name}
+                              alt={`${entity.name} - ${entity.types?.[0]?.replace('urn:entity:', '') || 'Entity'}`}
                               className="w-12 h-12 rounded-lg object-cover"
                             />
                           ) : (
@@ -285,11 +289,14 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                   }}
                   onFocus={() => profile2 && setShowSuggestions2(true)}
                   placeholder="Search for artists, movies, books, people..."
+                  id="profile2Input"
+                  aria-label="Search for second profile to compare"
                   className="w-full pl-12 pr-12 py-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
                 {selectedEntity2 && (
                   <button
                     onClick={() => clearSelection(2)}
+                    aria-label="Clear second profile selection"
                     className="absolute right-4 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-white"
                   >
                     <X className="h-5 w-5" />
@@ -304,7 +311,7 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                     {selectedEntity2.properties?.image?.url && (
                       <img 
                         src={selectedEntity2.properties.image.url} 
-                        alt={selectedEntity2.name}
+                        alt={`${selectedEntity2.name} - Second profile for comparison`}
                         className="w-12 h-12 rounded-lg object-cover"
                       />
                     )}
@@ -329,13 +336,14 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
                       <button
                         key={entity.entity_id || index}
                         onClick={() => handleEntitySelect(entity, 2)}
+                        aria-label={`Select ${entity.name} as second profile for comparison`}
                         className="w-full p-4 text-left hover:bg-gray-700 transition-colors duration-200 border-b border-gray-700 last:border-b-0"
                       >
                         <div className="flex items-center gap-3">
                           {entity.properties?.image?.url ? (
                             <img 
                               src={entity.properties.image.url} 
-                              alt={entity.name}
+                              alt={`${entity.name} - ${entity.types?.[0]?.replace('urn:entity:', '') || 'Entity'}`}
                               className="w-12 h-12 rounded-lg object-cover"
                             />
                           ) : (
@@ -379,6 +387,7 @@ Keep the analysis engaging, insightful, and practical. Focus on cultural implica
             <button
               onClick={handleCompare}
               disabled={!selectedEntity1 || !selectedEntity2 || loading}
+              aria-label="Compare the two selected cultural profiles"
               className="px-8 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-purple-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Comparing...' : 'Compare Profiles'}

@@ -440,6 +440,9 @@ const HomePage: React.FC = () => {
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: 0.3, delay: index * 0.1 }}
+                            onClick={() => toggleCategory(category.name)}
+                            aria-pressed={selectedCategories.includes(category.name)}
+                            aria-label={`${selectedCategories.includes(category.name) ? 'Remove' : 'Add'} ${category.name} category`}
                             className="group relative p-6 rounded-xl border border-gray-600 transition-all duration-300 hover:scale-105 bg-gray-700/30 hover:border-gray-500 hover:bg-gray-600/40 cursor-default"
                           >
                             <div className="text-center">
@@ -477,6 +480,8 @@ const HomePage: React.FC = () => {
                             animate={{ opacity: 1, scale: 1 }}
                             transition={{ duration: 0.3, delay: index * 0.03 }}
                             onClick={() => toggleEntityType(entityType.value)}
+                            aria-pressed={isSelected}
+                            aria-label={`${isSelected ? 'Remove' : 'Add'} ${entityType.label} content type`}
                             className={`group relative p-4 rounded-xl border transition-all duration-200 hover:scale-105 ${
                               isSelected
                                 ? 'border-purple-400 bg-purple-500/20'
@@ -559,8 +564,14 @@ const HomePage: React.FC = () => {
                 }}
                 placeholder="Enter your favorite artists, foods, cities, books, movies..."
                 onFocus={() => searchInput && setShowSuggestions(true)}
+                id="searchInput"
+                aria-label="Search for cultural entities like artists, movies, books, places"
+                aria-describedby="search-description"
                 className="w-full pl-12 pr-4 py-4 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent transition-all duration-200"
               />
+              <div id="search-description" className="sr-only">
+                Search across movies, music, books, places, people, and more to build your cultural persona
+              </div>
             </div>
 
             {/* Search Suggestions */}
@@ -577,13 +588,14 @@ const HomePage: React.FC = () => {
                       key={entity.entity_id || index}
                       onClick={() => handleEntitySelect(entity)}
                       disabled={selectedEntities.find(e => e.entity_id === entity.entity_id)}
+                      aria-label={`Add ${entity.name} to your cultural preferences`}
                       className="w-full p-4 text-left hover:bg-gray-700/50 transition-colors duration-200 border-b border-gray-700/50 last:border-b-0 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="flex items-center gap-4">
                         {entity.properties?.image?.url ? (
                           <img 
                             src={entity.properties.image.url} 
-                            alt={entity.name}
+                            alt={`${entity.name} - ${entity.types?.[0]?.replace('urn:entity:', '') || entity.type?.replace('urn:entity:', '') || 'Entity'}`}
                             className="w-14 h-14 rounded-xl object-cover border-2 border-gray-600"
                           />
                         ) : (
@@ -650,13 +662,14 @@ const HomePage: React.FC = () => {
                   {entity.properties?.image?.url && (
                     <img 
                       src={entity.properties.image.url} 
-                      alt={entity.name}
+                      alt={`${entity.name} - Selected cultural preference`}
                       className="w-10 h-10 rounded-lg object-cover"
                     />
                   )}
                   <span className="text-white font-medium">{entity.name}</span>
                   <button
                     onClick={() => removeEntity(entity.entity_id)}
+                    aria-label={`Remove ${entity.name} from selected preferences`}
                     className="p-1 text-gray-400 hover:text-red-400 transition-colors duration-200"
                   >
                     <X className="h-4 w-4" />
@@ -678,6 +691,7 @@ const HomePage: React.FC = () => {
             <button
               onClick={handleBuildPersona}
               disabled={selectedEntities.length === 0 || isSearching}
+              aria-label={`Build cultural persona from ${selectedEntities.length} selected preferences`}
               className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>

@@ -311,6 +311,8 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
       ref={mapRef} 
       className="w-full h-96 rounded-xl border border-gray-600 shadow-2xl"
       style={{ minHeight: '400px' }}
+      role="application"
+      aria-label="Interactive map for cultural location analysis. Click on any location to analyze cultural preferences in that area."
     />
   );
 };
