@@ -154,6 +154,31 @@ TasteBridge leverages Google Gemma's advanced language capabilities for:
 - **API Service Layer**: Clean abstraction for all external API interactions
 - **Responsive Design**: Mobile-first approach with breakpoint-specific optimizations
 
+## 📚 Comprehensive Documentation
+
+For detailed technical information and implementation guides, explore our comprehensive documentation:
+
+### 🏗️ **Technical Documentation**
+- **[Architecture Overview](docs/architecture.md)** - System design, component hierarchy, and data flow
+- **[API Integration Guide](docs/api-integration.md)** - Detailed Qloo and Google Gemma integration patterns
+- **[LLM Strategy & Prompt Engineering](docs/llm-strategy.md)** - Advanced AI integration and prompt optimization
+- **[Technical Deep Dive](docs/technical-deep-dive.md)** - Advanced implementation details and patterns
+
+### 🚀 **Project Planning**
+- **[Future Roadmap](docs/future-roadmap.md)** - Comprehensive development timeline and feature planning
+
+### 🎯 **Quick Navigation**
+```
+docs/
+├── architecture.md           # System architecture and design patterns
+├── api-integration.md        # Qloo & Together AI integration details
+├── llm-strategy.md          # AI prompt engineering and optimization
+├── technical-deep-dive.md   # Advanced implementation patterns
+└── future-roadmap.md        # Long-term vision and development plan
+```
+
+These documents provide in-depth technical insights, implementation strategies, and future development plans that complement this README's overview.
+
 ## 🚀 Getting Started
 
 ### Prerequisites
