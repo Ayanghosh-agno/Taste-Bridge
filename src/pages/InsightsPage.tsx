@@ -171,7 +171,7 @@ const InsightsPage: React.FC = () => {
   const fetchSubtypes = async (contentType: string) => {
     setLoadingSubtypes(true);
     try {
-      const response = await qlooService.makeRequest(`/subtypes?type=${contentType}`);
+      const response = await qlooService.makeRequest(`/tags?type=${contentType}`);
       setSubtypes(response.results || []);
     } catch (error) {
       console.error('Error fetching subtypes:', error);
@@ -422,48 +422,136 @@ const InsightsPage: React.FC = () => {
                 <p className="text-gray-300">Analyzing entity demographics...</p>
               </div>
             ) : (
-              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="space-y-8">
                 {entityDemographics.map((demo, index) => (
                   <motion.div
-                    key={demo.type}
+                    key={demo.entity_id || index}
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.3, delay: index * 0.1 }}
-                    className="p-6 bg-gray-700/30 rounded-xl border border-gray-600"
+                    className="bg-gray-700/30 rounded-xl border border-gray-600 p-6"
                   >
-                    <h4 className="text-white font-semibold mb-4 capitalize">{demo.typeName}</h4>
-                    <div className="space-y-3">
-                      {demo.entities.slice(0, 3).map((entity: any, entityIndex: number) => (
-                        <div key={entity.entity_id || entityIndex} className="flex items-center gap-3">
-                          {entity.properties?.image?.url ? (
-                            <img 
-                              src={entity.properties.image.url} 
-                              alt={entity.name}
-                              className="w-10 h-10 rounded-lg object-cover"
-                            />
-                          ) : (
-                            <div className="w-10 h-10 rounded-lg bg-gradient-to-br from-green-500 to-teal-500 flex items-center justify-center">
-                              <span className="text-white font-bold text-sm">
-                                {entity.name.charAt(0)}
-                              </span>
-                            </div>
-                          )}
-                          <div className="flex-1">
-                            <p className="text-white text-sm font-medium">{entity.name}</p>
-                            {entity.score && (
-                              <div className="flex items-center gap-1">
-                                <Star className="h-3 w-3 text-yellow-400" />
-                                <span className="text-gray-400 text-xs">
-                                  {Math.round(entity.score * 100)}%
-                                </span>
+                    <h4 className="text-white font-semibold mb-6 text-xl">Demographics Analysis</h4>
+                    
+                    {/* Age Demographics */}
+                    {demo.query?.age && (
+                      <div className="mb-8">
+                        <h5 className="text-green-400 font-semibold mb-4 flex items-center gap-2">
+                          <span className="text-xl">👥</span>
+                          Age Demographics
+                        </h5>
+                        <div className="space-y-3">
+                          {Object.entries(demo.query.age).map(([ageGroup, value]) => {
+                            const percentage = (value as number) * 100;
+                            const isPositive = percentage > 0;
+                            const absPercentage = Math.abs(percentage);
+                            
+                            return (
+                              <div key={ageGroup} className="flex items-center gap-4">
+                                <div className="w-24 text-gray-300 text-sm font-medium">
+                                  {ageGroup.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                                </div>
+                                <div className="flex-1 flex items-center gap-3">
+                                  <div className="flex-1 bg-gray-600 rounded-full h-3 overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-1000 ${
+                                        isPositive 
+                                          ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                          : 'bg-gradient-to-r from-red-500 to-pink-500'
+                                      }`}
+                                      style={{ width: `${Math.min(absPercentage, 100)}%` }}
+                                    />
+                                  </div>
+                                  <div className="flex items-center gap-2 min-w-[80px]">
+                                    <span className={`font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                                      {isPositive ? '+' : ''}{percentage.toFixed(1)}%
+                                    </span>
+                                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                                      isPositive 
+                                        ? 'bg-green-500/20 text-green-300' 
+                                        : 'bg-red-500/20 text-red-300'
+                                    }`}>
+                                      {isPositive ? 'Above Avg' : 'Below Avg'}
+                                    </span>
+                                  </div>
+                                </div>
                               </div>
-                            )}
-                          </div>
+                            );
+                          })}
                         </div>
-                      ))}
-                    </div>
+                      </div>
+                    )}
+                    
+                    {/* Gender Demographics */}
+                    {demo.query?.gender && (
+                      <div>
+                        <h5 className="text-purple-400 font-semibold mb-4 flex items-center gap-2">
+                          <span className="text-xl">⚧️</span>
+                          Gender Demographics
+                        </h5>
+                        <div className="grid grid-cols-2 gap-4">
+                          {Object.entries(demo.query.gender).map(([gender, value]) => {
+                            const percentage = (value as number) * 100;
+                            const isPositive = percentage > 0;
+                            const absPercentage = Math.abs(percentage);
+                            
+                            return (
+                              <div 
+                                key={gender} 
+                                className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                                  isPositive 
+                                    ? 'border-green-400/30 bg-green-500/10' 
+                                    : 'border-red-400/30 bg-red-500/10'
+                                }`}
+                              >
+                                <div className="text-center">
+                                  <div className="text-3xl mb-2">
+                                    {gender === 'male' ? '👨' : '👩'}
+                                  </div>
+                                  <div className="text-white font-semibold mb-2 capitalize">
+                                    {gender}
+                                  </div>
+                                  <div className={`text-2xl font-bold mb-2 ${
+                                    isPositive ? 'text-green-400' : 'text-red-400'
+                                  }`}>
+                                    {isPositive ? '+' : ''}{percentage.toFixed(1)}%
+                                  </div>
+                                  <div className="w-full bg-gray-600 rounded-full h-2 mb-3 overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full transition-all duration-1000 ${
+                                        isPositive 
+                                          ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                          : 'bg-gradient-to-r from-red-500 to-pink-500'
+                                      }`}
+                                      style={{ width: `${Math.min(absPercentage, 100)}%` }}
+                                    />
+                                  </div>
+                                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                    isPositive 
+                                      ? 'bg-green-500/20 text-green-300' 
+                                      : 'bg-red-500/20 text-red-300'
+                                  }`}>
+                                    {isPositive ? 'Above Average' : 'Below Average'}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
                   </motion.div>
                 ))}
+                
+                {entityDemographics.length === 0 && (
+                  <div className="text-center py-12">
+                    <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Users className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-400 text-lg">No demographics data available.</p>
+                    <p className="text-gray-500 text-sm mt-2">Try selecting a different entity.</p>
+                  </div>
+                )}
               </div>
             )}
           </motion.div>
