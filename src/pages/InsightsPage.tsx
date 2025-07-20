@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3 } from 'lucide-react';
+import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3, Info } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import LeafletMap from '../components/LeafletMap';
 import HeatmapVisualization from '../components/HeatmapVisualization';
@@ -73,10 +73,10 @@ const InsightsPage: React.FC = () => {
   const clearEntity = () => {
     setSelectedEntity(null);
     setSearchInput('');
-    setSelectedLocation(null);
-    setLocationInput('');
     setShowHeatmap(false);
     setHeatmapData([]);
+    setShowDemographics(false);
+    setDemographicData([]);
   };
 
   const handleLocationSubmit = () => {
@@ -151,19 +151,23 @@ const InsightsPage: React.FC = () => {
   };
 
   const generateDemographicInsights = async () => {
-    if (!selectedEntity || !selectedLocation) return;
+    if (!selectedLocation) return;
     
     setGeneratingDemographics(true);
     
     try {
-      // Build parameters for demographic insights
+      // Build parameters for demographic insights with location filter
       const params = new URLSearchParams({
         'filter.type': demographicType,
-        'filter.location': `${selectedLocation.lat},${selectedLocation.lng}`,
+        'filter.location': `POINT(${selectedLocation.lng} ${selectedLocation.lat})`,
         'filter.location.radius': radius.toString(),
-        'signal.interests.entities': selectedEntity.entity_id,
         'take': '20'
       });
+      
+      // Add entity signal if selected
+      if (selectedEntity) {
+        params.append('signal.interests.entities', selectedEntity.entity_id);
+      }
       
       // Add demographic filters if selected
       if (demographicGender) {
@@ -245,11 +249,128 @@ const InsightsPage: React.FC = () => {
           <p className="text-gray-400 text-lg">Discover cultural affinity patterns across geographic locations</p>
         </motion.div>
 
-        {/* Entity Search Section */}
+        {/* Interactive Map Section - Always Visible */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.1 }}
+          className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
+        >
+          <div className="flex items-center mb-6">
+            <Map className="h-6 w-6 text-orange-400 mr-3" />
+            <h3 className="text-2xl font-semibold text-white">Interactive Location Selection</h3>
+          </div>
+          
+          <div className="grid lg:grid-cols-2 gap-8">
+            {/* Map */}
+            <div>
+              <h4 className="text-white font-medium mb-4">Click on the map to select a location</h4>
+              <LeafletMap
+                center={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : [40.7128, -74.0060]}
+                zoom={selectedLocation ? 10 : 2}
+                heatmapData={showHeatmap ? heatmapData : []}
+                onLocationSelect={handleMapLocationSelect}
+                selectedEntity={selectedEntity}
+              />
+            </div>
+            
+            {/* Controls */}
+            <div className="space-y-6">
+              {/* Manual Location Input */}
+              <div>
+                <label className="block text-white font-medium mb-3">Enter Coordinates</label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    placeholder="40.7128, -74.0060 (latitude, longitude)"
+                    className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                  <button
+                    onClick={handleLocationSubmit}
+                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
+                  >
+                    Set Location
+                  </button>
+                </div>
+              </div>
+              
+              {/* Popular Locations */}
+              <div>
+                <label className="block text-white font-medium mb-3">Popular Locations</label>
+                <div className="grid grid-cols-2 gap-3">
+                  {popularLocations.map((location) => (
+                    <button
+                      key={location.name}
+                      onClick={() => {
+                        setSelectedLocation({ lat: location.lat, lng: location.lng });
+                        setLocationInput(`${location.lat}, ${location.lng}`);
+                      }}
+                      className="p-3 bg-gray-700/30 border border-gray-600 rounded-xl text-white hover:bg-gray-700/50 hover:border-purple-400/50 transition-all duration-200"
+                    >
+                      <div className="font-medium">{location.name}</div>
+                      <div className="text-gray-400 text-sm">
+                        {location.lat.toFixed(2)}°, {location.lng.toFixed(2)}°
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Selected Location Display */}
+              {selectedLocation && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-orange-500/20 border border-orange-400/30 rounded-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-6 w-6 text-orange-400" />
+                    <div>
+                      <h4 className="text-white font-semibold">Selected Location</h4>
+                      <p className="text-orange-300">
+                        Latitude: {selectedLocation.lat.toFixed(4)}°, Longitude: {selectedLocation.lng.toFixed(4)}°
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+              
+              {/* Radius Control */}
+              {selectedLocation && (
+                <div className="space-y-3">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-5 w-5 text-gray-400" />
+                    <label className="text-white font-medium">Analysis Radius:</label>
+                  </div>
+                  <div>
+                    <input
+                      type="range"
+                      min="5000"
+                      max="80000"
+                      step="5000"
+                      value={radius}
+                      onChange={(e) => setRadius(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-sm text-gray-400 mt-1">
+                      <span>5km</span>
+                      <span className="text-white font-medium">{(radius / 1000).toFixed(0)}km</span>
+                      <span>80km</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Entity Search Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
           className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
         >
           <div className="flex items-center mb-6">
@@ -364,261 +485,103 @@ const InsightsPage: React.FC = () => {
               </div>
             )}
           </div>
+          
+          {/* Info Message */}
+          {!selectedEntity && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="mt-6 p-4 bg-blue-500/10 border border-blue-400/20 rounded-xl"
+            >
+              <div className="flex items-center gap-3">
+                <Info className="h-5 w-5 text-blue-400" />
+                <p className="text-blue-300 text-sm">
+                  Select an entity above to unlock cultural heatmap generation and advanced demographic insights for your chosen location.
+                </p>
+              </div>
+            </motion.div>
+          )}
         </motion.div>
 
-        {/* Location Selection Section */}
-        {selectedEntity && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
-          >
-            <div className="flex items-center mb-6">
-              <Map className="h-6 w-6 text-orange-400 mr-3" />
-              <h3 className="text-2xl font-semibold text-white">Interactive Location Selection</h3>
+        {/* Demographic Insights Section - Always Visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.3 }}
+          className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
+        >
+          <div className="flex items-center mb-8">
+            <Users className="h-6 w-6 text-blue-400 mr-3" />
+            <h3 className="text-2xl font-semibold text-white">Demographic Insights</h3>
+            <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+              Advanced Filtering
+            </span>
+          </div>
+          
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Entity Type Filter */}
+            <div>
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                <Filter className="h-4 w-4 text-purple-400" />
+                Content Type
+              </label>
+              <select
+                value={demographicType}
+                onChange={(e) => setDemographicType(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                <option value="urn:entity:artist">urn:entity:artist</option>
+                <option value="urn:entity:book">urn:entity:book</option>
+                <option value="urn:entity:brand">urn:entity:brand</option>
+                <option value="urn:entity:destination">urn:entity:destination</option>
+                <option value="urn:entity:movie">urn:entity:movie</option>
+                <option value="urn:entity:person">urn:entity:person</option>
+                <option value="urn:entity:place">urn:entity:place</option>
+                <option value="urn:entity:podcast">urn:entity:podcast</option>
+                <option value="urn:entity:tv_show">urn:entity:tv_show</option>
+                <option value="urn:entity:videogame">urn:entity:videogame</option>
+              </select>
             </div>
             
-            <div className="grid lg:grid-cols-2 gap-8">
-              {/* Map */}
-              <div>
-                <h4 className="text-white font-medium mb-4">Click on the map to select a location</h4>
-                <LeafletMap
-                  center={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : [40.7128, -74.0060]}
-                  zoom={selectedLocation ? 10 : 2}
-                  heatmapData={showHeatmap ? heatmapData : []}
-                  onLocationSelect={handleMapLocationSelect}
-                  selectedEntity={selectedEntity}
-                />
-              </div>
-              
-              {/* Controls */}
-              <div className="space-y-6">
-                {/* Manual Location Input */}
-                <div>
-                  <label className="block text-white font-medium mb-3">Enter Coordinates</label>
-                  <div className="flex gap-3">
-                    <input
-                      type="text"
-                      value={locationInput}
-                      onChange={(e) => setLocationInput(e.target.value)}
-                      placeholder="40.7128, -74.0060 (latitude, longitude)"
-                      className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                    />
-                    <button
-                      onClick={handleLocationSubmit}
-                      className="px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
-                    >
-                      Set Location
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Popular Locations */}
-                <div>
-                  <label className="block text-white font-medium mb-3">Popular Locations</label>
-                  <div className="grid grid-cols-2 gap-3">
-                    {popularLocations.map((location) => (
-                      <button
-                        key={location.name}
-                        onClick={() => {
-                          setSelectedLocation({ lat: location.lat, lng: location.lng });
-                          setLocationInput(`${location.lat}, ${location.lng}`);
-                        }}
-                        className="p-3 bg-gray-700/30 border border-gray-600 rounded-xl text-white hover:bg-gray-700/50 hover:border-purple-400/50 transition-all duration-200"
-                      >
-                        <div className="font-medium">{location.name}</div>
-                        <div className="text-gray-400 text-sm">
-                          {location.lat.toFixed(2)}°, {location.lng.toFixed(2)}°
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-                
-                {/* Selected Location Display */}
-                {selectedLocation && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="p-4 bg-orange-500/20 border border-orange-400/30 rounded-xl"
-                  >
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-6 w-6 text-orange-400" />
-                      <div>
-                        <h4 className="text-white font-semibold">Selected Location</h4>
-                        <p className="text-orange-300">
-                          Latitude: {selectedLocation.lat.toFixed(4)}°, Longitude: {selectedLocation.lng.toFixed(4)}°
-                        </p>
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
-                
-                {/* Radius Control */}
-                {selectedLocation && (
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <Settings className="h-5 w-5 text-gray-400" />
-                      <label className="text-white font-medium">Analysis Radius:</label>
-                    </div>
-                    <div>
-                      <input
-                        type="range"
-                        min="5000"
-                        max="80000"
-                        step="5000"
-                        value={radius}
-                        onChange={(e) => setRadius(Number(e.target.value))}
-                        className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                      />
-                      <div className="flex justify-between text-sm text-gray-400 mt-1">
-                        <span>5km</span>
-                        <span className="text-white font-medium">{(radius / 1000).toFixed(0)}km</span>
-                        <span>80km</span>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </motion.div>
-        )}
-
-        {/* Generate Heatmap Button */}
-        {selectedEntity && selectedLocation && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="text-center mb-8"
-          >
-            <button
-              onClick={generateHeatmap}
-              disabled={generatingHeatmap}
-              className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-              <span className="relative z-10 flex items-center gap-3">
-                {generatingHeatmap ? (
-                  <>
-                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                    Generating Heatmap...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-5 w-5" />
-                    Generate Cultural Heatmap
-                  </>
-                )}
-              </span>
-            </button>
-          </motion.div>
-        )}
-
-        {/* Heatmap Results */}
-        {showHeatmap && heatmapData.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
-          >
-            <div className="flex items-center mb-8">
-              <Zap className="h-6 w-6 text-yellow-400 mr-3" />
-              <h3 className="text-2xl font-semibold text-white">Cultural Affinity Heatmap Results</h3>
-              <span className="ml-3 px-3 py-1 bg-yellow-500/20 text-yellow-300 text-sm rounded-full">
-                {heatmapData.length} data points
-              </span>
+            {/* Gender Filter */}
+            <div>
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-pink-400" />
+                Gender
+              </label>
+              <select
+                value={demographicGender}
+                onChange={(e) => setDemographicGender(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+              >
+                <option value="">All Genders</option>
+                <option value="male">male</option>
+                <option value="female">female</option>
+              </select>
             </div>
             
-            <HeatmapVisualization
-              heatmapData={heatmapData}
-              selectedEntity={selectedEntity}
-              selectedLocation={selectedLocation}
-              radius={radius}
-            />
-          </motion.div>
-        )}
-
-        {/* Demographic Insights Section */}
-        {selectedEntity && selectedLocation && (
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
-          >
-            <div className="flex items-center mb-8">
-              <Users className="h-6 w-6 text-blue-400 mr-3" />
-              <h3 className="text-2xl font-semibold text-white">Demographic Insights</h3>
-              <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
-                Advanced Filtering
-              </span>
+            {/* Age Filter */}
+            <div>
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-orange-400" />
+                Age Group
+              </label>
+              <select
+                value={demographicAge}
+                onChange={(e) => setDemographicAge(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                <option value="">All Ages</option>
+                <option value="35_and_younger">35_and_younger</option>
+                <option value="36_to_55">36_to_55</option>
+                <option value="55_and_older">55_and_older</option>
+              </select>
             </div>
-            
-            <div className="grid lg:grid-cols-3 gap-6 mb-8">
-              {/* Entity Type Filter */}
-              <div>
-                <label className="block text-white font-medium mb-3 flex items-center gap-2">
-                  <Filter className="h-4 w-4 text-purple-400" />
-                  Content Type
-                </label>
-                <select
-                  value={demographicType}
-                  onChange={(e) => setDemographicType(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
-                >
-                  <option value="urn:entity:artist">Artists</option>
-                  <option value="urn:entity:book">Books</option>
-                  <option value="urn:entity:brand">Brands</option>
-                  <option value="urn:entity:destination">Destinations</option>
-                  <option value="urn:entity:movie">Movies</option>
-                  <option value="urn:entity:person">People</option>
-                  <option value="urn:entity:place">Places</option>
-                  <option value="urn:entity:podcast">Podcasts</option>
-                  <option value="urn:entity:tv_show">TV Shows</option>
-                  <option value="urn:entity:videogame">Video Games</option>
-                </select>
-              </div>
-              
-              {/* Gender Filter */}
-              <div>
-                <label className="block text-white font-medium mb-3 flex items-center gap-2">
-                  <Users className="h-4 w-4 text-pink-400" />
-                  Gender
-                </label>
-                <select
-                  value={demographicGender}
-                  onChange={(e) => setDemographicGender(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
-                >
-                  <option value="">All Genders</option>
-                  <option value="male">Male</option>
-                  <option value="female">Female</option>
-                </select>
-              </div>
-              
-              {/* Age Filter */}
-              <div>
-                <label className="block text-white font-medium mb-3 flex items-center gap-2">
-                  <BarChart3 className="h-4 w-4 text-orange-400" />
-                  Age Group
-                </label>
-                <select
-                  value={demographicAge}
-                  onChange={(e) => setDemographicAge(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
-                >
-                  <option value="">All Ages</option>
-                  <option value="35_and_younger">35 and Younger</option>
-                  <option value="36_to_55">36 to 55</option>
-                  <option value="55_and_older">55 and Older</option>
-                </select>
-              </div>
-            </div>
-            
-            {/* Current Filters Display */}
+          </div>
+          
+          {/* Current Filters Display */}
+          {selectedLocation && (
             <div className="mb-6 p-4 bg-gray-700/30 rounded-xl">
               <h4 className="text-white font-medium mb-3">Current Analysis Parameters:</h4>
               <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
@@ -648,30 +611,92 @@ const InsightsPage: React.FC = () => {
                 </div>
               </div>
             </div>
+          )}
+          
+          {/* Generate Button */}
+          <div className="text-center">
+            <button
+              onClick={generateDemographicInsights}
+              disabled={!selectedLocation || generatingDemographics}
+              className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+              <span className="relative z-10 flex items-center gap-3">
+                {generatingDemographics ? (
+                  <>
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    Analyzing Demographics...
+                  </>
+                ) : (
+                  <>
+                    <BarChart3 className="h-5 w-5" />
+                    Generate Demographic Insights
+                  </>
+                )}
+              </span>
+            </button>
             
-            {/* Generate Button */}
-            <div className="text-center">
-              <button
-                onClick={generateDemographicInsights}
-                disabled={generatingDemographics}
-                className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
-                <span className="relative z-10 flex items-center gap-3">
-                  {generatingDemographics ? (
-                    <>
-                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
-                      Analyzing Demographics...
-                    </>
-                  ) : (
-                    <>
-                      <BarChart3 className="h-5 w-5" />
-                      Generate Demographic Insights
-                    </>
-                  )}
-                </span>
-              </button>
+            {!selectedLocation && (
+              <p className="text-gray-400 text-sm mt-3">
+                Please select a location on the map above to generate demographic insights
+              </p>
+            )}
+          </div>
+        </motion.div>
+
+        {/* Generate Heatmap Button - Only shows when entity is selected */}
+        {selectedEntity && selectedLocation && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="text-center mb-8"
+          >
+            <button
+              onClick={generateHeatmap}
+              disabled={generatingHeatmap}
+              className="group relative px-8 py-4 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-purple-600 to-orange-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+              <span className="relative z-10 flex items-center gap-3">
+                {generatingHeatmap ? (
+                  <>
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    Generating Heatmap...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-5 w-5" />
+                    Generate Cultural Heatmap for {selectedEntity.name}
+                  </>
+                )}
+              </span>
+            </button>
+          </motion.div>
+        )}
+
+        {/* Heatmap Results */}
+        {showHeatmap && heatmapData.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
+          >
+            <div className="flex items-center mb-8">
+              <Zap className="h-6 w-6 text-yellow-400 mr-3" />
+              <h3 className="text-2xl font-semibold text-white">Cultural Affinity Heatmap Results</h3>
+              <span className="ml-3 px-3 py-1 bg-yellow-500/20 text-yellow-300 text-sm rounded-full">
+                {heatmapData.length} data points
+              </span>
             </div>
+            
+            <HeatmapVisualization
+              heatmapData={heatmapData}
+              selectedEntity={selectedEntity}
+              selectedLocation={selectedLocation}
+              radius={radius}
+            />
           </motion.div>
         )}
 
