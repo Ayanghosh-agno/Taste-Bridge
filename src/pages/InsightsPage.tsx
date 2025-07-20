@@ -155,13 +155,27 @@ const InsightsPage: React.FC = () => {
 
     setLoadingEntityDemographics(true);
     try {
-      const response = await qlooService.makeRequest(`/demographics?entity_id=${selectedEntity.entity_id}`);
+      const params = new URLSearchParams({
+        'filter.type': 'urn:demographics',
+        'signal.interests.entities': selectedEntity.entity_id
+      });
+      
+      console.log('Calling demographics insights API with params:', params.toString());
+      
+      const response = await qlooService.makeRequest(`/v2/insights?${params.toString()}`);
       
       console.log('Demographics API response:', response);
       
-      setEntityDemographics(response.results?.demographics || []);
+      // Process the insights response to extract demographics data
+      const entities = response.results?.entities || [];
+      const demographicsData = entities.filter((entity: any) => 
+        entity.type === 'urn:demographics' || entity.subtype?.includes('demographics')
+      );
+      
+      setEntityDemographics(demographicsData);
     } catch (error) {
       console.error('Error generating entity demographics:', error);
+      setEntityDemographics([]);
     } finally {
       setLoadingEntityDemographics(false);
     }
