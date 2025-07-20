@@ -295,6 +295,7 @@ const InsightsPage: React.FC = () => {
       // Add selected subtypes
       if (selectedSubtypes.length > 0) {
         params.append('filter.tags', selectedSubtypes.join(','));
+      }
       const response = await qlooService.makeRequest(`/geospatial?${params.toString()}`);
       
       console.log('Calling geospatial API with params:', params.toString());
@@ -1301,8 +1302,7 @@ const InsightsPage: React.FC = () => {
                     </button>
                   ))}
                 </div>
-                      />
-                    ) : (
+              
               {/* Subtypes Section */}
               {loadingSubtypes && (
                 <div className="text-center py-6">
@@ -1601,7 +1601,41 @@ const InsightsPage: React.FC = () => {
             </div>
           </motion.div>
         )}
-@@ .. @@
+
+        {/* Demographic Results */}
+        {showDemographics && demographicData.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+          >
+            <div className="flex items-center mb-8">
+              <Users className="h-6 w-6 text-blue-400 mr-3" />
+              <h3 className="text-2xl font-semibold text-white">Cultural Insights for Location</h3>
+              <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+                {demographicData.length} insights
+              </span>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {demographicData.map((item, index) => (
+                <motion.div
+                  key={item.entity_id || index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="relative p-6 bg-gray-700/30 rounded-xl border border-gray-600 hover:border-blue-400/50 transition-all duration-200 hover:scale-105"
+                >
+                  {/* Entity Info */}
+                  <div className="flex items-start gap-4 mb-4">
+                    {item.properties?.image?.url ? (
+                      <img 
+                        src={item.properties.image.url} 
+                        alt={item.name}
+                        className="w-16 h-16 rounded-xl object-cover border-2 border-blue-400/30"
+                      />
+                    ) : (
                       <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-2 border-blue-400/30">
                         <span className="text-white font-bold text-xl">
                           {item.name.charAt(0)}
