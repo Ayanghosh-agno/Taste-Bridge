@@ -166,11 +166,8 @@ const InsightsPage: React.FC = () => {
       
       console.log('Demographics API response:', response);
       
-      // Process the insights response to extract demographics data
-      const entities = response.results?.entities || [];
-      const demographicsData = entities.filter((entity: any) => 
-        entity.type === 'urn:demographics' || entity.subtype?.includes('demographics')
-      );
+      // Process the demographics response
+      const demographicsData = response.results?.demographics || [];
       
       setEntityDemographics(demographicsData);
     } catch (error) {
