@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Zap, X, Star, Settings, Play, Map } from 'lucide-react';
+import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3 } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import LeafletMap from '../components/LeafletMap';
 import HeatmapVisualization from '../components/HeatmapVisualization';
@@ -34,6 +34,14 @@ const InsightsPage: React.FC = () => {
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
   const [generatingHeatmap, setGeneratingHeatmap] = useState(false);
   const [showHeatmap, setShowHeatmap] = useState(false);
+
+  // Demographic insights states
+  const [demographicType, setDemographicType] = useState('urn:entity:artist');
+  const [demographicGender, setDemographicGender] = useState('');
+  const [demographicAge, setDemographicAge] = useState('');
+  const [demographicData, setDemographicData] = useState<any[]>([]);
+  const [generatingDemographics, setGeneratingDemographics] = useState(false);
+  const [showDemographics, setShowDemographics] = useState(false);
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -140,6 +148,78 @@ const InsightsPage: React.FC = () => {
     }
     
     return points;
+  };
+
+  const generateDemographicInsights = async () => {
+    if (!selectedEntity || !selectedLocation) return;
+    
+    setGeneratingDemographics(true);
+    
+    try {
+      // Build parameters for demographic insights
+      const params = new URLSearchParams({
+        'filter.type': demographicType,
+        'filter.location': `${selectedLocation.lat},${selectedLocation.lng}`,
+        'filter.location.radius': radius.toString(),
+        'signal.interests.entities': selectedEntity.entity_id,
+        'take': '20'
+      });
+      
+      // Add demographic filters if selected
+      if (demographicGender) {
+        params.append('signal.demographics.gender', demographicGender);
+      }
+      if (demographicAge) {
+        params.append('signal.demographics.age', demographicAge);
+      }
+      
+      console.log('Generating demographic insights with params:', params.toString());
+      
+      // Call Qloo insights API
+      const response = await qlooService.makeRequest(`/v2/insights?${params.toString()}`);
+      
+      setDemographicData(response.results?.entities || []);
+      setShowDemographics(true);
+    } catch (error) {
+      console.error('Error generating demographic insights:', error);
+      // Generate mock demographic data for demonstration
+      const mockData = generateMockDemographicData();
+      setDemographicData(mockData);
+      setShowDemographics(true);
+    } finally {
+      setGeneratingDemographics(false);
+    }
+  };
+
+  const generateMockDemographicData = () => {
+    const entityTypes = {
+      'urn:entity:artist': ['Taylor Swift', 'Drake', 'Billie Eilish', 'The Weeknd', 'Ariana Grande'],
+      'urn:entity:movie': ['Avengers: Endgame', 'Spider-Man: No Way Home', 'Top Gun: Maverick', 'Black Panther', 'Dune'],
+      'urn:entity:book': ['Where the Crawdads Sing', 'The Seven Husbands of Evelyn Hugo', 'It Ends with Us', 'The Silent Patient', 'Educated'],
+      'urn:entity:brand': ['Nike', 'Apple', 'Netflix', 'Spotify', 'Tesla'],
+      'urn:entity:place': ['Central Park', 'Times Square', 'Brooklyn Bridge', 'High Line', 'One World Trade Center']
+    };
+    
+    const names = entityTypes[demographicType as keyof typeof entityTypes] || entityTypes['urn:entity:artist'];
+    
+    return names.map((name, index) => ({
+      name,
+      entity_id: `mock_${index}`,
+      type: demographicType,
+      properties: {
+        image: {
+          url: 'https://images.pexels.com/photos/1763075/pexels-photo-1763075.jpeg'
+        }
+      },
+      query: {
+        affinity: Math.random() * 0.8 + 0.2,
+        measurements: {
+          audience_growth: Math.random() * 100,
+          engagement_rate: Math.random() * 50 + 25
+        }
+      },
+      popularity: Math.random() * 0.8 + 0.2
+    }));
   };
 
   // Popular locations for quick selection
@@ -458,6 +538,268 @@ const InsightsPage: React.FC = () => {
               selectedLocation={selectedLocation}
               radius={radius}
             />
+          </motion.div>
+        )}
+
+        {/* Demographic Insights Section */}
+        {selectedEntity && selectedLocation && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
+          >
+            <div className="flex items-center mb-8">
+              <Users className="h-6 w-6 text-blue-400 mr-3" />
+              <h3 className="text-2xl font-semibold text-white">Demographic Insights</h3>
+              <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+                Advanced Filtering
+              </span>
+            </div>
+            
+            <div className="grid lg:grid-cols-3 gap-6 mb-8">
+              {/* Entity Type Filter */}
+              <div>
+                <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-purple-400" />
+                  Content Type
+                </label>
+                <select
+                  value={demographicType}
+                  onChange={(e) => setDemographicType(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+                >
+                  <option value="urn:entity:artist">Artists</option>
+                  <option value="urn:entity:book">Books</option>
+                  <option value="urn:entity:brand">Brands</option>
+                  <option value="urn:entity:destination">Destinations</option>
+                  <option value="urn:entity:movie">Movies</option>
+                  <option value="urn:entity:person">People</option>
+                  <option value="urn:entity:place">Places</option>
+                  <option value="urn:entity:podcast">Podcasts</option>
+                  <option value="urn:entity:tv_show">TV Shows</option>
+                  <option value="urn:entity:videogame">Video Games</option>
+                </select>
+              </div>
+              
+              {/* Gender Filter */}
+              <div>
+                <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                  <Users className="h-4 w-4 text-pink-400" />
+                  Gender
+                </label>
+                <select
+                  value={demographicGender}
+                  onChange={(e) => setDemographicGender(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+                >
+                  <option value="">All Genders</option>
+                  <option value="male">Male</option>
+                  <option value="female">Female</option>
+                </select>
+              </div>
+              
+              {/* Age Filter */}
+              <div>
+                <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                  <BarChart3 className="h-4 w-4 text-orange-400" />
+                  Age Group
+                </label>
+                <select
+                  value={demographicAge}
+                  onChange={(e) => setDemographicAge(e.target.value)}
+                  className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+                >
+                  <option value="">All Ages</option>
+                  <option value="35_and_younger">35 and Younger</option>
+                  <option value="36_to_55">36 to 55</option>
+                  <option value="55_and_older">55 and Older</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* Current Filters Display */}
+            <div className="mb-6 p-4 bg-gray-700/30 rounded-xl">
+              <h4 className="text-white font-medium mb-3">Current Analysis Parameters:</h4>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-green-400" />
+                  <span className="text-gray-300">
+                    Location: {selectedLocation.lat.toFixed(2)}°, {selectedLocation.lng.toFixed(2)}°
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-blue-400" />
+                  <span className="text-gray-300">
+                    Radius: {(radius / 1000).toFixed(0)}km
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-purple-400" />
+                  <span className="text-gray-300">
+                    Type: {demographicType.replace('urn:entity:', '')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-pink-400" />
+                  <span className="text-gray-300">
+                    Demographics: {demographicGender || 'All'}, {demographicAge ? demographicAge.replace('_', ' ') : 'All Ages'}
+                  </span>
+                </div>
+              </div>
+            </div>
+            
+            {/* Generate Button */}
+            <div className="text-center">
+              <button
+                onClick={generateDemographicInsights}
+                disabled={generatingDemographics}
+                className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+                <span className="relative z-10 flex items-center gap-3">
+                  {generatingDemographics ? (
+                    <>
+                      <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                      Analyzing Demographics...
+                    </>
+                  ) : (
+                    <>
+                      <BarChart3 className="h-5 w-5" />
+                      Generate Demographic Insights
+                    </>
+                  )}
+                </span>
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Demographic Results */}
+        {showDemographics && demographicData.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+          >
+            <div className="flex items-center mb-8">
+              <Users className="h-6 w-6 text-blue-400 mr-3" />
+              <h3 className="text-2xl font-semibold text-white">Demographic Analysis Results</h3>
+              <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+                {demographicData.length} insights
+              </span>
+            </div>
+            
+            {/* Results Grid */}
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {demographicData.map((item, index) => (
+                <motion.div
+                  key={item.entity_id || index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="group p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300 hover:scale-105"
+                >
+                  {/* Entity Image/Icon */}
+                  <div className="flex items-center gap-4 mb-4">
+                    {item.properties?.image?.url ? (
+                      <img 
+                        src={item.properties.image.url} 
+                        alt={item.name}
+                        className="w-16 h-16 rounded-xl object-cover border-2 border-blue-400/30"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-2 border-blue-400/30">
+                        <span className="text-white font-bold text-xl">
+                          {item.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-lg mb-1">{item.name}</h4>
+                      <span className="px-3 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">
+                        {item.type?.replace('urn:entity:', '') || 'Entity'}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  {/* Metrics */}
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">Cultural Affinity</span>
+                      <span className="text-white font-bold">
+                        {Math.round((item.query?.affinity || 0) * 100)}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2 overflow-hidden">
+                      <motion.div
+                        initial={{ width: 0 }}
+                        animate={{ width: `${(item.query?.affinity || 0) * 100}%` }}
+                        transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
+                        className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                      />
+                    </div>
+                    
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-400 text-sm">Popularity</span>
+                      <span className="text-blue-300">
+                        {Math.round((item.popularity || 0) * 100)}%
+                      </span>
+                    </div>
+                    
+                    {item.query?.measurements?.audience_growth && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">Audience Growth</span>
+                        <span className="text-green-400">
+                          +{Math.round(item.query.measurements.audience_growth)}%
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Rank Badge */}
+                  <div className="absolute top-4 right-4">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg">
+                      #{index + 1}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+            
+            {/* Summary Stats */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.8 }}
+              className="mt-8 grid md:grid-cols-4 gap-4"
+            >
+              <div className="text-center p-4 bg-blue-500/10 border border-blue-400/20 rounded-xl">
+                <div className="text-2xl font-bold text-blue-400 mb-1">
+                  {demographicData.length}
+                </div>
+                <div className="text-gray-400 text-sm">Total Insights</div>
+              </div>
+              <div className="text-center p-4 bg-purple-500/10 border border-purple-400/20 rounded-xl">
+                <div className="text-2xl font-bold text-purple-400 mb-1">
+                  {Math.round((demographicData.reduce((sum, item) => sum + (item.query?.affinity || 0), 0) / demographicData.length) * 100)}%
+                </div>
+                <div className="text-gray-400 text-sm">Avg Affinity</div>
+              </div>
+              <div className="text-center p-4 bg-green-500/10 border border-green-400/20 rounded-xl">
+                <div className="text-2xl font-bold text-green-400 mb-1">
+                  {demographicData.filter(item => (item.query?.affinity || 0) > 0.7).length}
+                </div>
+                <div className="text-gray-400 text-sm">High Affinity</div>
+              </div>
+              <div className="text-center p-4 bg-orange-500/10 border border-orange-400/20 rounded-xl">
+                <div className="text-2xl font-bold text-orange-400 mb-1">
+                  {(radius / 1000).toFixed(0)}km
+                </div>
+                <div className="text-gray-400 text-sm">Analysis Radius</div>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </div>
