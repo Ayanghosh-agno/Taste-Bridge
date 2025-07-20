@@ -183,7 +183,15 @@ const InsightsPage: React.FC = () => {
     setLoadingSubtypes(true);
     try {
       const response = await qlooService.makeRequest(`/geospatial/describe?type=${contentType}`);
-      setSubtypes(response.results || []);
+      
+      // Parse the response structure: response.types[contentType].parameters.filter.tags
+      const typeData = response.types?.[contentType];
+      const filterTags = typeData?.parameters?.['filter.tags'] || [];
+      
+      console.log('Subtypes API response:', response);
+      console.log('Parsed filter tags:', filterTags);
+      
+      setSubtypes(filterTags);
     } catch (error) {
       console.error('Error fetching subtypes:', error);
       setSubtypes([]);
