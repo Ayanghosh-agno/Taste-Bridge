@@ -376,6 +376,8 @@ const InsightsPage: React.FC = () => {
                       </div>
                     </div>
                   </div>
+                )}
+              </div>
 
               {/* Radius Control */}
               <div className="mb-6">
@@ -636,7 +638,7 @@ const InsightsPage: React.FC = () => {
             {/* Age Group Selection */}
             <div>
               <h4 className="text-white font-semibold mb-6 text-lg">Age Group</h4>
-              <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {ageGroups.map((age) => (
                   <motion.button
                     key={age.value}
