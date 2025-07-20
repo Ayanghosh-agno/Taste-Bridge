@@ -57,6 +57,10 @@ const InsightsPage: React.FC = () => {
   const [geoResults, setGeoResults] = useState<any[]>([]);
   const [loadingGeoInsights, setLoadingGeoInsights] = useState(false);
 
+  // Additional states for subtypes
+  const [demographicContentType, setDemographicContentType] = useState('urn:entity:artist');
+  const [subtypes, setSubtypes] = useState<any[]>([]);
+
   const ageGroups = [
     { value: '', label: 'All Ages' },
     { value: '18_24', label: '18-24' },
@@ -121,19 +125,20 @@ const InsightsPage: React.FC = () => {
     }
   }, [selectedEntity]);
 
-  const fetchSubtypes = async () => {
-    if (!selectedEntity) return;
+  const fetchSubtypes = async (entityType?: string) => {
+    if (!selectedEntity && !entityType) return;
     
     setLoadingSubtypes(true);
     try {
-      const entityType = selectedEntity.type || selectedEntity.types?.[0];
-      if (!entityType) return;
+      const typeToUse = entityType || selectedEntity.type || selectedEntity.types?.[0];
+      if (!typeToUse) return;
       
-      const response = await qlooService.makeRequest(`/geospatial/describe?type=${encodeURIComponent(entityType)}`);
+      const response = await qlooService.makeRequest(`/geospatial/describe?type=${encodeURIComponent(typeToUse)}`);
       
-      const typeData = response.types?.[entityType];
+      const typeData = response.types?.[typeToUse];
       if (typeData?.parameters?.['filter.tags']) {
         setAvailableSubtypes(typeData.parameters['filter.tags']);
+        setSubtypes(typeData.parameters['filter.tags']);
       }
     } catch (error) {
       console.error('Error fetching subtypes:', error);
@@ -1055,12 +1060,12 @@ const InsightsPage: React.FC = () => {
           <div className="flex items-center mb-8">
             <Users className="h-6 w-6 text-blue-400 mr-3" />
             <h3 className="text-2xl font-semibold text-white">Demographic Insights</h3>
-                  {selectedEntity && (
-                    <div>
-                      <span className="text-gray-400">Entity:</span>
-                      <div className="text-blue-300 font-medium">{selectedEntity.name}</div>
-                    </div>
-                  )}
+            {selectedEntity && (
+              <div>
+                <span className="text-gray-400">Entity:</span>
+                <div className="text-blue-300 font-medium">{selectedEntity.name}</div>
+              </div>
+            )}
             <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
               Advanced Filtering
             </span>
@@ -1069,21 +1074,29 @@ const InsightsPage: React.FC = () => {
           <div className="grid lg:grid-cols-3 gap-6 mb-8">
             {/* Entity Type Filter */}
             <div>
-                  {selectedSubtypes.length > 0 && (
-                    <div className="md:col-span-2 lg:col-span-5">
-                      <span className="text-gray-400">Selected Subtypes:</span>
-                      <div className="text-blue-300 font-medium">
-                        {selectedSubtypes.map(id => subtypes.find(s => s.id === id)?.name).join(', ')}
-                      </div>
-                    </div>
-                  )}
+              {selectedSubtypes.length > 0 && (
+                <div className="md:col-span-2 lg:col-span-5">
+                  <span className="text-gray-400">Selected Subtypes:</span>
+                  <div className="text-blue-300 font-medium">
+                    {selectedSubtypes.map(id => subtypes.find(s => s.id === id)?.name).join(', ')}
+                  </div>
+                </div>
+              )}
               <label className="block text-white font-medium mb-3 flex items-center gap-2">
                 <Filter className="h-4 w-4 text-purple-400" />
                 Content Type
               </label>
               <select
-          {/* Geo Analysis Results */}
-          {geoResults.length > 0 && (
+                value={demographicContentType}
+                onChange={async (e) => {
+                  setDemographicContentType(e.target.value);
+                  if (e.target.value) {
+                    await fetchSubtypes(e.target.value);
+                  } else {
+                    setSubtypes([]);
+                    setSelectedSubtypes([]);
+                  }
+                }}
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
               >
                 <option value="urn:entity:artist">urn:entity:artist</option>
@@ -1093,15 +1106,13 @@ const InsightsPage: React.FC = () => {
                 <option value="urn:entity:movie">urn:entity:movie</option>
                 <option value="urn:entity:person">urn:entity:person</option>
                 <option value="urn:entity:place">urn:entity:place</option>
-                  <h3 className="text-2xl font-semibold text-white">Geo Analysis Results</h3>
                 <option value="urn:entity:tv_show">urn:entity:tv_show</option>
-                    {geoResults.length} insights
               </select>
             </div>
             
             {/* Gender Filter */}
             <div>
-                {geoResults.map((result, index) => (
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
                 <Users className="h-4 w-4 text-pink-400" />
                 Gender
               </label>
@@ -1128,17 +1139,55 @@ const InsightsPage: React.FC = () => {
                 className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
               >
                 <option value="">All Ages</option>
-                        {result.properties?.short_description && (
-                          <p className="text-gray-400 text-sm mt-1 line-clamp-2">
-                            {result.properties.short_description}
-                          </p>
-                        )}
                 <option value="35_and_younger">35_and_younger</option>
                 <option value="36_to_55">36_to_55</option>
                 <option value="55_and_older">55_and_older</option>
               </select>
             </div>
           </div>
+
+          {/* Subtypes Selection */}
+          {subtypes.length > 0 && (
+            <div className="md:col-span-3">
+              <label className="block text-white font-semibold mb-3">Subtypes</label>
+              {loadingSubtypes ? (
+                <div className="flex items-center justify-center p-8">
+                  <div className="animate-spin w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full"></div>
+                  <span className="ml-3 text-gray-400">Loading subtypes...</span>
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                  {subtypes.map((subtype) => (
+                    <label
+                      key={subtype.id}
+                      className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
+                        selectedSubtypes.includes(subtype.id)
+                          ? 'border-green-400 bg-green-500/20 text-green-300'
+                          : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSubtypes.includes(subtype.id)}
+                        onChange={(e) => {
+                          if (e.target.checked) {
+                            setSelectedSubtypes(prev => [...prev, subtype.id]);
+                          } else {
+                            setSelectedSubtypes(prev => prev.filter(id => id !== subtype.id));
+                          }
+                        }}
+                        className="sr-only"
+                      />
+                      <span className="text-sm font-medium">{subtype.name}</span>
+                      {selectedSubtypes.includes(subtype.id) && (
+                        <span className="ml-2 text-green-400">✓</span>
+                      )}
+                    </label>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
           
           {/* Current Filters Display */}
           {selectedLocation && (
@@ -1154,26 +1203,6 @@ const InsightsPage: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Settings className="h-4 w-4 text-blue-400" />
                   <span className="text-gray-300">
-                      
-                      {/* Rank Percentage */}
-                      {result.query?.rank_percent !== undefined && (
-                        <div>
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-gray-400 text-sm">Rank Percentile</span>
-                            <span className="text-green-400 font-bold">
-                              {Math.round(result.query.rank_percent * 100)}%
-                            </span>
-                          </div>
-                          <div className="w-full bg-gray-600 rounded-full h-2">
-                            <motion.div
-                              initial={{ width: 0 }}
-                              animate={{ width: `${result.query.rank_percent * 100}%` }}
-                              transition={{ duration: 1, delay: 0.3 + index * 0.1 }}
-                              className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
-                            />
-                          </div>
-                        </div>
-                      )}
                     Radius: {(radius / 1000).toFixed(0)}km
                   </span>
                 </div>
@@ -1194,32 +1223,6 @@ const InsightsPage: React.FC = () => {
                     <Star className="h-4 w-4 text-yellow-400" />
                     <span className="text-gray-300">
                       Entity: {selectedEntity.name}
-                      
-                      {/* External Links */}
-                      {result.properties?.external && (
-                        <div className="flex flex-wrap gap-2 mt-3">
-                          {result.properties.external.imdb && (
-                            <a
-                              href={`https://www.imdb.com/title/${result.properties.external.imdb.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full hover:bg-yellow-500/30 transition-colors"
-                            >
-                              IMDB
-                            </a>
-                          )}
-                          {result.properties.external.rottentomatoes && (
-                            <a
-                              href={`https://www.rottentomatoes.com/m/${result.properties.external.rottentomatoes.id}`}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded-full hover:bg-red-500/30 transition-colors"
-                            >
-                              RT
-                            </a>
-                          )}
-                        </div>
-                      )}
                     </span>
                   </div>
                 )}
@@ -1230,16 +1233,8 @@ const InsightsPage: React.FC = () => {
           {/* Generate Button */}
           <div className="text-center">
             <button
-                    value={demographicContentType}
-                    onChange={async (e) => {
-                      setDemographicContentType(e.target.value);
-                      if (e.target.value) {
-                        await fetchSubtypes(e.target.value);
-                      } else {
-                        setSubtypes([]);
-                        setSelectedSubtypes([]);
-                      }
-                    }}
+              onClick={generateDemographicInsights}
+              disabled={!selectedLocation || generatingDemographics}
               className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
@@ -1251,49 +1246,6 @@ const InsightsPage: React.FC = () => {
                   </>
                 ) : (
                   <>
-                {/* Subtypes Selection */}
-                {subtypes.length > 0 && (
-                  <div className="md:col-span-3">
-                    <label className="block text-white font-semibold mb-3">Subtypes</label>
-                    {loadingSubtypes ? (
-                      <div className="flex items-center justify-center p-8">
-                        <div className="animate-spin w-6 h-6 border-2 border-blue-400 border-t-transparent rounded-full"></div>
-                        <span className="ml-3 text-gray-400">Loading subtypes...</span>
-                      </div>
-                    ) : (
-                      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-                        {subtypes.map((subtype) => (
-                          <label
-                            key={subtype.id}
-                            className={`flex items-center p-3 rounded-xl border cursor-pointer transition-all duration-200 ${
-                              selectedSubtypes.includes(subtype.id)
-                                ? 'border-green-400 bg-green-500/20 text-green-300'
-                                : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
-                            }`}
-                          >
-                            <input
-                              type="checkbox"
-                              checked={selectedSubtypes.includes(subtype.id)}
-                              onChange={(e) => {
-                                if (e.target.checked) {
-                                  setSelectedSubtypes(prev => [...prev, subtype.id]);
-                                } else {
-                                  setSelectedSubtypes(prev => prev.filter(id => id !== subtype.id));
-                                }
-                              }}
-                              className="sr-only"
-                            />
-                            <span className="text-sm font-medium">{subtype.name}</span>
-                            {selectedSubtypes.includes(subtype.id) && (
-                              <span className="ml-2 text-green-400">✓</span>
-                            )}
-                          </label>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                )}
-
                     <BarChart3 className="h-5 w-5" />
                     Generate Demographic Insights
                   </>
@@ -1331,8 +1283,8 @@ const InsightsPage: React.FC = () => {
                 <motion.div
                   key={item.entity_id || index}
                   initial={{ opacity: 0, scale: 0.9 }}
-                  onClick={generateGeoInsights}
-                  disabled={!selectedLocation || generatingGeoInsights}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
                   className="group p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300 hover:scale-105"
                 >
                   {/* Entity Image/Icon */}
@@ -1437,7 +1389,7 @@ const InsightsPage: React.FC = () => {
           </motion.div>
         )}
       </div>
-                  {generatingGeoInsights ? 'Analyzing Geo Data...' : 'Generate Geo Insights'}
+    </div>
   );
 };
 
