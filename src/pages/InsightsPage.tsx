@@ -1,20 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Zap, X, Star, Settings, Play } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from 'react-leaflet';
-import L from 'leaflet';
 import { qlooService } from '../services/qloo';
-
-// Custom marker icon
-const customIcon = new L.Icon({
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41]
-});
 
 interface HeatmapPoint {
   location: {
@@ -29,65 +16,6 @@ interface HeatmapPoint {
   };
 }
 
-// Component to handle map clicks
-const MapClickHandler: React.FC<{ onLocationSelect: (lat: number, lng: number) => void }> = ({ onLocationSelect }) => {
-  useMapEvents({
-    click: (e) => {
-      const { lat, lng } = e.latlng;
-      onLocationSelect(lat, lng);
-    },
-  });
-  return null;
-};
-
-// Component to create heatmap circles
-const HeatmapLayer: React.FC<{ heatmapData: HeatmapPoint[] }> = ({ heatmapData }) => {
-  return (
-    <>
-      {heatmapData.map((point, index) => {
-        const intensity = point.query.affinity;
-        let color = '#3b82f6'; // Blue for low affinity
-        let fillOpacity = 0.3;
-        
-        if (intensity > 0.7) {
-          color = '#f97316'; // Orange for high affinity
-          fillOpacity = 0.7;
-        } else if (intensity > 0.4) {
-          color = '#a855f7'; // Purple for medium affinity
-          fillOpacity = 0.5;
-        }
-        
-        const radius = 3 + (intensity * 12); // Size based on affinity
-        
-        return (
-          <L.Circle
-            key={`heatmap-${index}`}
-            center={[point.location.latitude, point.location.longitude]}
-            radius={radius * 100} // Convert to meters for map display
-            pathOptions={{
-              color: color,
-              fillColor: color,
-              fillOpacity: fillOpacity,
-              weight: 2,
-              opacity: 0.8
-            }}
-          >
-            <Popup>
-              <div className="text-sm">
-                <div className="font-semibold">Affinity: {Math.round(intensity * 100)}%</div>
-                <div>Popularity: {Math.round(point.query.popularity * 100)}%</div>
-                <div className="text-xs text-gray-600 mt-1">
-                  {point.location.latitude.toFixed(4)}°, {point.location.longitude.toFixed(4)}°
-                </div>
-              </div>
-            </Popup>
-          </L.Circle>
-        );
-      })}
-    </>
-  );
-};
-
 const InsightsPage: React.FC = () => {
   const [searchInput, setSearchInput] = useState('');
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
@@ -95,10 +23,10 @@ const InsightsPage: React.FC = () => {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
   
-  // Map and location states
+  // Location states
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(50000); // Default 50km
-  const [showMap, setShowMap] = useState(false);
+  const [locationInput, setLocationInput] = useState('');
   
   // Heatmap states
   const [heatmapData, setHeatmapData] = useState<HeatmapPoint[]>([]);
@@ -130,20 +58,25 @@ const InsightsPage: React.FC = () => {
     setSearchInput(entity.name);
     setShowSuggestions(false);
     setSearchResults([]);
-    setShowMap(true);
   };
 
   const clearEntity = () => {
     setSelectedEntity(null);
     setSearchInput('');
-    setShowMap(false);
     setSelectedLocation(null);
+    setLocationInput('');
     setShowHeatmap(false);
     setHeatmapData([]);
   };
 
-  const handleLocationSelect = (lat: number, lng: number) => {
-    setSelectedLocation({ lat, lng });
+  const handleLocationSubmit = () => {
+    // Parse location input (expecting "lat, lng" format)
+    const coords = locationInput.split(',').map(coord => parseFloat(coord.trim()));
+    if (coords.length === 2 && !isNaN(coords[0]) && !isNaN(coords[1])) {
+      setSelectedLocation({ lat: coords[0], lng: coords[1] });
+    } else {
+      alert('Please enter coordinates in the format: latitude, longitude (e.g., 40.7128, -74.0060)');
+    }
   };
 
   const generateHeatmap = async () => {
@@ -201,6 +134,16 @@ const InsightsPage: React.FC = () => {
     
     return points;
   };
+
+  // Popular locations for quick selection
+  const popularLocations = [
+    { name: 'New York City', lat: 40.7128, lng: -74.0060 },
+    { name: 'Los Angeles', lat: 34.0522, lng: -118.2437 },
+    { name: 'London', lat: 51.5074, lng: -0.1278 },
+    { name: 'Tokyo', lat: 35.6762, lng: 139.6503 },
+    { name: 'Paris', lat: 48.8566, lng: 2.3522 },
+    { name: 'Sydney', lat: -33.8688, lng: 151.2093 }
+  ];
 
   return (
     <div className="pt-16 min-h-screen bg-gray-900">
@@ -336,8 +279,8 @@ const InsightsPage: React.FC = () => {
           </div>
         </motion.div>
 
-        {/* Map Section */}
-        {showMap && (
+        {/* Location Selection Section */}
+        {selectedEntity && (
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -350,106 +293,92 @@ const InsightsPage: React.FC = () => {
             </div>
             
             <div className="space-y-6">
-              {/* Map Container */}
-              <div className="relative">
-                <div className="w-full h-96 rounded-xl overflow-hidden border border-gray-700">
-                  <MapContainer
-                    center={[40.7128, -74.0060]} // Default to New York
-                    zoom={2}
-                    style={{ height: '100%', width: '100%' }}
-                    className="z-0"
+              {/* Manual Location Input */}
+              <div>
+                <label className="block text-white font-medium mb-3">Enter Coordinates</label>
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={locationInput}
+                    onChange={(e) => setLocationInput(e.target.value)}
+                    placeholder="40.7128, -74.0060 (latitude, longitude)"
+                    className="flex-1 px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
+                  />
+                  <button
+                    onClick={handleLocationSubmit}
+                    className="px-6 py-3 bg-gradient-to-r from-purple-500 to-orange-500 rounded-xl font-semibold text-white hover:shadow-lg transition-all duration-300"
                   >
-                    <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                    />
-                    
-                    <MapClickHandler onLocationSelect={handleLocationSelect} />
-                    
-                    {selectedLocation && (
-                      <Marker 
-                        position={[selectedLocation.lat, selectedLocation.lng]}
-                        icon={customIcon}
-                      >
-                        <Popup>
-                          <div className="text-sm">
-                            <div className="font-semibold">Selected Location</div>
-                            <div>Lat: {selectedLocation.lat.toFixed(4)}°</div>
-                            <div>Lng: {selectedLocation.lng.toFixed(4)}°</div>
-                            <div className="text-xs text-gray-600 mt-1">
-                              Analysis radius: {(radius / 1000).toFixed(0)}km
-                            </div>
-                          </div>
-                        </Popup>
-                      </Marker>
-                    )}
-                    
-                    {/* Radius Circle */}
-                    {selectedLocation && (
-                      <L.Circle
-                        center={[selectedLocation.lat, selectedLocation.lng]}
-                        radius={radius}
-                        pathOptions={{
-                          color: '#a855f7',
-                          fillColor: '#a855f7',
-                          fillOpacity: 0.1,
-                          weight: 2,
-                          dashArray: '5, 5'
-                        }}
-                      />
-                    )}
-                    
-                    {/* Heatmap Layer */}
-                    {showHeatmap && <HeatmapLayer heatmapData={heatmapData} />}
-                  </MapContainer>
+                    Set Location
+                  </button>
                 </div>
-                
-                {selectedLocation && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.9 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    className="absolute top-4 left-4 bg-gray-800/90 backdrop-blur-md rounded-lg p-3 border border-gray-600"
-                  >
-                    <div className="text-white text-sm">
-                      <div className="font-semibold">Selected Location</div>
-                      <div className="text-gray-300">
-                        Lat: {selectedLocation.lat.toFixed(4)}°
-                      </div>
-                      <div className="text-gray-300">
-                        Lng: {selectedLocation.lng.toFixed(4)}°
-                      </div>
-                    </div>
-                  </motion.div>
-                )}
               </div>
+              
+              {/* Popular Locations */}
+              <div>
+                <label className="block text-white font-medium mb-3">Or Choose a Popular Location</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {popularLocations.map((location) => (
+                    <button
+                      key={location.name}
+                      onClick={() => {
+                        setSelectedLocation({ lat: location.lat, lng: location.lng });
+                        setLocationInput(`${location.lat}, ${location.lng}`);
+                      }}
+                      className="p-3 bg-gray-700/30 border border-gray-600 rounded-xl text-white hover:bg-gray-700/50 hover:border-purple-400/50 transition-all duration-200"
+                    >
+                      <div className="font-medium">{location.name}</div>
+                      <div className="text-gray-400 text-sm">
+                        {location.lat.toFixed(2)}°, {location.lng.toFixed(2)}°
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+              
+              {/* Selected Location Display */}
+              {selectedLocation && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 bg-orange-500/20 border border-orange-400/30 rounded-xl"
+                >
+                  <div className="flex items-center gap-3">
+                    <MapPin className="h-6 w-6 text-orange-400" />
+                    <div>
+                      <h4 className="text-white font-semibold">Selected Location</h4>
+                      <p className="text-orange-300">
+                        Latitude: {selectedLocation.lat.toFixed(4)}°, Longitude: {selectedLocation.lng.toFixed(4)}°
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
               
               {/* Radius Control */}
-              <div className="flex items-center gap-6">
-                <div className="flex items-center gap-3">
-                  <Settings className="h-5 w-5 text-gray-400" />
-                  <label className="text-white font-medium">Analysis Radius:</label>
-                </div>
-                <div className="flex-1 max-w-md">
-                  <input
-                    type="range"
-                    min="5000"
-                    max="80000"
-                    step="5000"
-                    value={radius}
-                    onChange={(e) => setRadius(Number(e.target.value))}
-                    className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer slider"
-                  />
-                  <div className="flex justify-between text-sm text-gray-400 mt-1">
-                    <span>5km</span>
-                    <span className="text-white font-medium">{(radius / 1000).toFixed(0)}km</span>
-                    <span>80km</span>
+              {selectedLocation && (
+                <div className="flex items-center gap-6">
+                  <div className="flex items-center gap-3">
+                    <Settings className="h-5 w-5 text-gray-400" />
+                    <label className="text-white font-medium">Analysis Radius:</label>
+                  </div>
+                  <div className="flex-1 max-w-md">
+                    <input
+                      type="range"
+                      min="5000"
+                      max="80000"
+                      step="5000"
+                      value={radius}
+                      onChange={(e) => setRadius(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <div className="flex justify-between text-sm text-gray-400 mt-1">
+                      <span>5km</span>
+                      <span className="text-white font-medium">{(radius / 1000).toFixed(0)}km</span>
+                      <span>80km</span>
+                    </div>
                   </div>
                 </div>
-              </div>
-              
-              <div className="text-center text-gray-400 text-sm">
-                Click anywhere on the map to select a location for heatmap analysis
-              </div>
+              )}
             </div>
           </motion.div>
         )}
@@ -495,33 +424,10 @@ const InsightsPage: React.FC = () => {
           >
             <div className="flex items-center mb-6">
               <Zap className="h-6 w-6 text-yellow-400 mr-3" />
-              <h3 className="text-2xl font-semibold text-white">Cultural Affinity Heatmap</h3>
+              <h3 className="text-2xl font-semibold text-white">Cultural Affinity Heatmap Results</h3>
               <span className="ml-3 px-3 py-1 bg-yellow-500/20 text-yellow-300 text-sm rounded-full">
                 {heatmapData.length} data points
               </span>
-            </div>
-            
-            {/* Heatmap Legend */}
-            <div className="mb-6 p-4 bg-gray-700/30 rounded-xl">
-              <h4 className="text-white font-semibold mb-3">Legend</h4>
-              <div className="flex items-center gap-6 flex-wrap">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-orange-500 rounded-full"></div>
-                  <span className="text-gray-300 text-sm">High Affinity (70%+)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-purple-500 rounded-full"></div>
-                  <span className="text-gray-300 text-sm">Medium Affinity (40-70%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-blue-500 rounded-full"></div>
-                  <span className="text-gray-300 text-sm">Low Affinity (0-40%)</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 bg-purple-500 border-2 border-white rounded-full"></div>
-                  <span className="text-gray-300 text-sm">Selected Location</span>
-                </div>
-              </div>
             </div>
             
             {/* Statistics */}
@@ -596,33 +502,20 @@ const InsightsPage: React.FC = () => {
                   ))}
               </div>
             </div>
+            
+            {/* Analysis Summary */}
+            <div className="mt-6 p-4 bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-400/20 rounded-xl">
+              <h4 className="text-white font-semibold mb-2">Analysis Summary</h4>
+              <p className="text-gray-300 text-sm">
+                Based on the cultural affinity analysis for <strong>{selectedEntity.name}</strong> around 
+                coordinates {selectedLocation?.lat.toFixed(4)}°, {selectedLocation?.lng.toFixed(4)}° 
+                within a {(radius / 1000).toFixed(0)}km radius, we found {heatmapData.length} data points 
+                with an average cultural affinity of {Math.round(heatmapData.reduce((sum, point) => sum + point.query.affinity, 0) / heatmapData.length * 100)}%.
+              </p>
+            </div>
           </motion.div>
         )}
       </div>
-      
-      {/* Custom CSS for slider */}
-      <style jsx>{`
-        .slider::-webkit-slider-thumb {
-          appearance: none;
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #a855f7, #f97316);
-          cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-        }
-        
-        .slider::-moz-range-thumb {
-          height: 20px;
-          width: 20px;
-          border-radius: 50%;
-          background: linear-gradient(45deg, #a855f7, #f97316);
-          cursor: pointer;
-          border: 2px solid #ffffff;
-          box-shadow: 0 0 10px rgba(168, 85, 247, 0.5);
-        }
-      `}</style>
     </div>
   );
 };
