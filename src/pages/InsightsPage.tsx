@@ -50,10 +50,8 @@ const InsightsPage: React.FC = () => {
   ];
 
   const ageGroups = [
-    { value: '18_to_24', label: '18-24', icon: '🧑', color: 'from-green-500 to-teal-500' },
-    { value: '25_to_34', label: '25-34', icon: '👤', color: 'from-orange-500 to-red-500' },
-    { value: '35_to_44', label: '35-44', icon: '👨‍💼', color: 'from-purple-500 to-indigo-500' },
-    { value: '45_to_54', label: '45-54', icon: '👩‍💼', color: 'from-yellow-500 to-orange-500' },
+    { value: '35_and_younger', label: '35 & Younger', icon: '🧑', color: 'from-green-500 to-teal-500' },
+    { value: '36_to_55', label: '36-55', icon: '👨‍💼', color: 'from-purple-500 to-indigo-500' },
     { value: '55_and_older', label: '55+', icon: '👴', color: 'from-gray-500 to-slate-500' }
   ];
 
