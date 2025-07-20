@@ -36,23 +36,27 @@ const InsightsPage: React.FC = () => {
 
   // Content types for geo insights
   const contentTypes = [
-    { value: 'urn:entity:movie', label: 'Movies', icon: '🎬', color: 'from-red-500 to-orange-500' },
-    { value: 'urn:entity:artist', label: 'Artists', icon: '🎤', color: 'from-pink-500 to-rose-500' },
-    { value: 'urn:entity:book', label: 'Books', icon: '📚', color: 'from-emerald-500 to-teal-500' },
-    { value: 'urn:entity:place', label: 'Places', icon: '📍', color: 'from-green-500 to-emerald-500' },
-    { value: 'urn:entity:tv_show', label: 'TV Shows', icon: '📺', color: 'from-cyan-500 to-blue-500' },
-    { value: 'urn:entity:brand', label: 'Brands', icon: '🏷️', color: 'from-blue-500 to-cyan-500' }
+    { value: 'urn:entity:artist', label: 'Artists', icon: '🎤' },
+    { value: 'urn:entity:book', label: 'Books', icon: '📚' },
+    { value: 'urn:entity:brand', label: 'Brands', icon: '🏷️' },
+    { value: 'urn:entity:destination', label: 'Destinations', icon: '🏝️' },
+    { value: 'urn:entity:movie', label: 'Movies', icon: '🎬' },
+    { value: 'urn:entity:person', label: 'People', icon: '👤' },
+    { value: 'urn:entity:place', label: 'Places', icon: '📍' },
+    { value: 'urn:entity:podcast', label: 'Podcasts', icon: '🎙️' },
+    { value: 'urn:entity:tv_show', label: 'TV Shows', icon: '📺' },
+    { value: 'urn:entity:videogame', label: 'Video Games', icon: '🎮' }
   ];
 
   const genderOptions = [
-    { value: 'male', label: 'Male', icon: '👨', color: 'from-blue-500 to-indigo-500' },
-    { value: 'female', label: 'Female', icon: '👩', color: 'from-purple-500 to-pink-500' }
+    { value: 'male', label: 'Male', icon: '👨' },
+    { value: 'female', label: 'Female', icon: '👩' }
   ];
 
   const ageGroups = [
-    { value: '35_and_younger', label: '35 & Younger', icon: '🧑', color: 'from-green-500 to-teal-500' },
-    { value: '36_to_55', label: '36-55', icon: '👨‍💼', color: 'from-purple-500 to-indigo-500' },
-    { value: '55_and_older', label: '55+', icon: '👴', color: 'from-gray-500 to-slate-500' }
+    { value: '35_and_younger', label: '35 & Younger', icon: '🧑' },
+    { value: '36_to_55', label: '36-55', icon: '👨‍💼' },
+    { value: '55_and_older', label: '55+', icon: '👴' }
   ];
 
   // Search for locations
@@ -609,29 +613,24 @@ const InsightsPage: React.FC = () => {
             {/* Content Type Selection */}
             <div>
               <h4 className="text-white font-semibold mb-6 text-lg">Content Type</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                {contentTypes.map((type) => (
-                  <motion.button
-                    key={type.value}
-                    onClick={() => handleContentTypeSelect(type.value)}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className={`p-6 rounded-xl border-2 transition-all duration-200 ${
-                      selectedContentType === type.value
-                        ? 'border-blue-400 bg-blue-500/20'
-                        : 'border-gray-600 bg-gray-700/30 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-3xl mb-3">{type.icon}</div>
-                      <div className={`font-semibold text-sm ${
-                        selectedContentType === type.value ? 'text-blue-300' : 'text-gray-300'
-                      }`}>
-                        {type.label}
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
+              <div className="relative">
+                <select
+                  value={selectedContentType}
+                  onChange={(e) => handleContentTypeSelect(e.target.value)}
+                  className="w-full p-4 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent appearance-none cursor-pointer"
+                >
+                  <option value="">Select Content Type</option>
+                  {contentTypes.map((type) => (
+                    <option key={type.value} value={type.value}>
+                      {type.icon} {type.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 
@@ -695,58 +694,48 @@ const InsightsPage: React.FC = () => {
             {/* Gender Selection */}
             <div>
               <h4 className="text-white font-semibold mb-6 text-lg">Gender</h4>
-              <div className="grid grid-cols-2 gap-4">
-                {genderOptions.map((gender) => (
-                  <motion.button
-                    key={gender.value}
-                    onClick={() => setSelectedGender(selectedGender === gender.value ? '' : gender.value)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`p-6 rounded-xl border-2 transition-all duration-200 ${
-                      selectedGender === gender.value
-                        ? 'border-purple-400 bg-purple-500/20'
-                        : 'border-gray-600 bg-gray-700/30 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-3xl mb-3">{gender.icon}</div>
-                      <div className={`font-semibold ${
-                        selectedGender === gender.value ? 'text-purple-300' : 'text-gray-300'
-                      }`}>
-                        {gender.label}
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
+              <div className="relative">
+                <select
+                  value={selectedGender}
+                  onChange={(e) => setSelectedGender(e.target.value)}
+                  className="w-full p-4 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-transparent appearance-none cursor-pointer"
+                >
+                  <option value="">Select Gender (Optional)</option>
+                  {genderOptions.map((gender) => (
+                    <option key={gender.value} value={gender.value}>
+                      {gender.icon} {gender.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 
             {/* Age Group Selection */}
             <div>
               <h4 className="text-white font-semibold mb-6 text-lg">Age Group</h4>
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                {ageGroups.map((age) => (
-                  <motion.button
-                    key={age.value}
-                    onClick={() => setSelectedAgeGroup(selectedAgeGroup === age.value ? '' : age.value)}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    className={`p-6 rounded-xl border-2 transition-all duration-200 ${
-                      selectedAgeGroup === age.value
-                        ? 'border-orange-400 bg-orange-500/20'
-                        : 'border-gray-600 bg-gray-700/30 hover:border-gray-500'
-                    }`}
-                  >
-                    <div className="text-center">
-                      <div className="text-3xl mb-3">{age.icon}</div>
-                      <div className={`font-semibold ${
-                        selectedAgeGroup === age.value ? 'text-orange-300' : 'text-gray-300'
-                      }`}>
-                        {age.label}
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
+              <div className="relative">
+                <select
+                  value={selectedAgeGroup}
+                  onChange={(e) => setSelectedAgeGroup(e.target.value)}
+                  className="w-full p-4 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400 focus:border-transparent appearance-none cursor-pointer"
+                >
+                  <option value="">Select Age Group (Optional)</option>
+                  {ageGroups.map((age) => (
+                    <option key={age.value} value={age.value}>
+                      {age.icon} {age.label}
+                    </option>
+                  ))}
+                </select>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none">
+                  <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </div>
               </div>
             </div>
 
