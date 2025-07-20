@@ -598,6 +598,146 @@ const InsightsPage: React.FC = () => {
           </div>
         </motion.div>
 
+        {/* Demographic Insights Section - Always Visible */}
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
+        >
+          <div className="flex items-center mb-8">
+            <Users className="h-6 w-6 text-blue-400 mr-3" />
+            <h3 className="text-2xl font-semibold text-white">Demographic Insights</h3>
+            <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+              Advanced Filtering
+            </span>
+          </div>
+          
+          <div className="grid lg:grid-cols-3 gap-6 mb-8">
+            {/* Entity Type Filter */}
+            <div>
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                <Filter className="h-4 w-4 text-purple-400" />
+                Content Type
+              </label>
+              <select
+                value={demographicType}
+                onChange={(e) => setDemographicType(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-purple-400"
+              >
+                <option value="urn:entity:artist">urn:entity:artist</option>
+                <option value="urn:entity:book">urn:entity:book</option>
+                <option value="urn:entity:brand">urn:entity:brand</option>
+                <option value="urn:entity:destination">urn:entity:destination</option>
+                <option value="urn:entity:movie">urn:entity:movie</option>
+                <option value="urn:entity:person">urn:entity:person</option>
+                <option value="urn:entity:place">urn:entity:place</option>
+                <option value="urn:entity:podcast">urn:entity:podcast</option>
+                <option value="urn:entity:tv_show">urn:entity:tv_show</option>
+                <option value="urn:entity:videogame">urn:entity:videogame</option>
+              </select>
+            </div>
+            
+            {/* Gender Filter */}
+            <div>
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                <Users className="h-4 w-4 text-pink-400" />
+                Gender
+              </label>
+              <select
+                value={demographicGender}
+                onChange={(e) => setDemographicGender(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+              >
+                <option value="">All Genders</option>
+                <option value="male">male</option>
+                <option value="female">female</option>
+              </select>
+            </div>
+            
+            {/* Age Filter */}
+            <div>
+              <label className="block text-white font-medium mb-3 flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-orange-400" />
+                Age Group
+              </label>
+              <select
+                value={demographicAge}
+                onChange={(e) => setDemographicAge(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                <option value="">All Ages</option>
+                <option value="35_and_younger">35_and_younger</option>
+                <option value="36_to_55">36_to_55</option>
+                <option value="55_and_older">55_and_older</option>
+              </select>
+            </div>
+          </div>
+          
+          {/* Current Filters Display */}
+          {selectedLocation && (
+            <div className="mb-6 p-4 bg-gray-700/30 rounded-xl">
+              <h4 className="text-white font-medium mb-3">Current Analysis Parameters:</h4>
+              <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-green-400" />
+                  <span className="text-gray-300">
+                    Location: {selectedLocation.lat.toFixed(2)}°, {selectedLocation.lng.toFixed(2)}°
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Settings className="h-4 w-4 text-blue-400" />
+                  <span className="text-gray-300">
+                    Radius: {(radius / 1000).toFixed(0)}km
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Filter className="h-4 w-4 text-purple-400" />
+                  <span className="text-gray-300">
+                    Type: {demographicType.replace('urn:entity:', '')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Users className="h-4 w-4 text-pink-400" />
+                  <span className="text-gray-300">
+                    Demographics: {demographicGender || 'All'}, {demographicAge ? demographicAge.replace('_', ' ') : 'All Ages'}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Generate Button */}
+          <div className="text-center">
+            <button
+              onClick={generateDemographicInsights}
+              disabled={!selectedLocation || generatingDemographics}
+              className="group relative px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl blur-lg opacity-0 group-hover:opacity-50 transition-opacity duration-300"></div>
+              <span className="relative z-10 flex items-center gap-3">
+                {generatingDemographics ? (
+                  <>
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    Analyzing Demographics...
+                  </>
+                ) : (
+                  <>
+                    <BarChart3 className="h-5 w-5" />
+                    Generate Demographic Insights
+                  </>
+                )}
+              </span>
+            </button>
+            
+            {!selectedLocation && (
+              <p className="text-gray-400 text-sm mt-3">
+                Please select a location on the map above to generate demographic insights
+              </p>
+            )}
+          </div>
+        </motion.div> 
+
         {/* Entity Demographics Section - Only shows after heatmap generation */}
         {showHeatmap && selectedEntity && (
             <motion.div
@@ -804,8 +944,6 @@ const InsightsPage: React.FC = () => {
             />
           </motion.div>
         )}
-
-        
 
         {/* Demographic Results */}
         {showDemographics && demographicData.length > 0 && (
