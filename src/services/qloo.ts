@@ -343,6 +343,9 @@ const QLOO_API_KEY = import.meta.env.VITE_QLOO_API_KEY || 'Q6QmSrWCYJMMwb5PqQTLH
 
 class QlooService {
   private async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
+  
+  // Make the makeRequest method public so it can be used from components
+  async makeRequest(endpoint: string, options: RequestInit = {}): Promise<any> {
     const url = `${QLOO_BASE_URL}${endpoint}`;
     const headers = {
       'X-API-Key': QLOO_API_KEY,

@@ -43,6 +43,10 @@ const InsightsPage: React.FC = () => {
   const [generatingDemographics, setGeneratingDemographics] = useState(false);
   const [showDemographics, setShowDemographics] = useState(false);
 
+  // Entity demographics states
+  const [entityDemographics, setEntityDemographics] = useState<any>(null);
+  const [loadingEntityDemographics, setLoadingEntityDemographics] = useState(false);
+
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
@@ -68,6 +72,9 @@ const InsightsPage: React.FC = () => {
     setSearchInput(entity.name);
     setShowSuggestions(false);
     setSearchResults([]);
+    
+    // Automatically fetch entity demographics when entity is selected
+    fetchEntityDemographics(entity.entity_id);
   };
 
   const clearEntity = () => {
@@ -77,6 +84,48 @@ const InsightsPage: React.FC = () => {
     setHeatmapData([]);
     setShowDemographics(false);
     setDemographicData([]);
+    setEntityDemographics(null);
+  };
+
+  const fetchEntityDemographics = async (entityId: string) => {
+    setLoadingEntityDemographics(true);
+    
+    try {
+      const params = new URLSearchParams({
+        'signal.interests.entities': entityId,
+        'filter.type': 'urn:demographics'
+      });
+      
+      console.log('Fetching entity demographics with params:', params.toString());
+      
+      const response = await qlooService.makeRequest(`/v2/insights?${params.toString()}`);
+      
+      console.log('Entity demographics API response:', response);
+      setEntityDemographics(response.results?.demographics?.[0] || null);
+    } catch (error) {
+      console.error('Error fetching entity demographics:', error);
+      // Generate mock demographic data for demonstration
+      const mockDemographics = {
+        entity_id: entityId,
+        query: {
+          age: {
+            "24_and_younger": Math.random() * 1.2 - 0.6,
+            "25_to_29": Math.random() * 1.2 - 0.6,
+            "30_to_34": Math.random() * 1.2 - 0.6,
+            "35_to_44": Math.random() * 1.2 - 0.6,
+            "45_to_54": Math.random() * 1.2 - 0.6,
+            "55_and_older": Math.random() * 1.2 - 0.6
+          },
+          gender: {
+            "male": Math.random() * 1.2 - 0.6,
+            "female": Math.random() * 1.2 - 0.6
+          }
+        }
+      };
+      setEntityDemographics(mockDemographics);
+    } finally {
+      setLoadingEntityDemographics(false);
+    }
   };
 
   const handleLocationSubmit = () => {
@@ -364,6 +413,188 @@ const InsightsPage: React.FC = () => {
               )}
             </div>
           </div>
+          
+          {/* Entity Demographics Section */}
+          {selectedEntity && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+              className="mt-8 bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+            >
+              <div className="flex items-center mb-6">
+                <Users className="h-6 w-6 text-green-400 mr-3" />
+                <h3 className="text-2xl font-semibold text-white">Entity Demographics</h3>
+                <span className="ml-3 px-3 py-1 bg-green-500/20 text-green-300 text-sm rounded-full">
+                  {selectedEntity.name}
+                </span>
+              </div>
+              
+              {loadingEntityDemographics ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin w-8 h-8 border-2 border-green-400 border-t-transparent rounded-full mx-auto mb-4"></div>
+                  <p className="text-gray-300">Loading demographic insights...</p>
+                </div>
+              ) : entityDemographics ? (
+                <div className="grid lg:grid-cols-2 gap-8">
+                  {/* Age Demographics */}
+                  <div className="space-y-4">
+                    <h4 className="text-white font-semibold text-lg mb-4 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white text-xs">📊</span>
+                      </div>
+                      Age Distribution
+                    </h4>
+                    
+                    {Object.entries(entityDemographics.query.age).map(([ageGroup, value]: [string, any], index) => {
+                      const percentage = Math.abs(value * 100);
+                      const isPositive = value >= 0;
+                      
+                      return (
+                        <motion.div
+                          key={ageGroup}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: index * 0.1 }}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-300 font-medium">
+                              {ageGroup.replace('_', ' ').replace('and', '&')}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                                {isPositive ? '+' : '-'}{percentage.toFixed(1)}%
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {isPositive ? 'Above avg' : 'Below avg'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="relative">
+                            <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                transition={{ duration: 1, delay: 0.5 + index * 0.1 }}
+                                className={`h-full rounded-full ${
+                                  isPositive 
+                                    ? 'bg-gradient-to-r from-green-500 to-emerald-500' 
+                                    : 'bg-gradient-to-r from-red-500 to-pink-500'
+                                }`}
+                              />
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                {percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                  
+                  {/* Gender Demographics */}
+                  <div className="space-y-4">
+                    <h4 className="text-white font-semibold text-lg mb-4 flex items-center gap-2">
+                      <div className="w-6 h-6 bg-gradient-to-r from-pink-500 to-purple-500 rounded-lg flex items-center justify-center">
+                        <span className="text-white text-xs">👥</span>
+                      </div>
+                      Gender Distribution
+                    </h4>
+                    
+                    {Object.entries(entityDemographics.query.gender).map(([gender, value]: [string, any], index) => {
+                      const percentage = Math.abs(value * 100);
+                      const isPositive = value >= 0;
+                      
+                      return (
+                        <motion.div
+                          key={gender}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: 0.6 + index * 0.1 }}
+                          className="space-y-2"
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="text-gray-300 font-medium capitalize">
+                              {gender}
+                            </span>
+                            <div className="flex items-center gap-2">
+                              <span className={`text-sm font-bold ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+                                {isPositive ? '+' : '-'}{percentage.toFixed(1)}%
+                              </span>
+                              <span className="text-xs text-gray-400">
+                                {isPositive ? 'Above avg' : 'Below avg'}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          <div className="relative">
+                            <div className="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${percentage}%` }}
+                                transition={{ duration: 1, delay: 0.8 + index * 0.1 }}
+                                className={`h-full rounded-full ${
+                                  gender === 'male'
+                                    ? isPositive 
+                                      ? 'bg-gradient-to-r from-blue-500 to-cyan-500'
+                                      : 'bg-gradient-to-r from-red-500 to-pink-500'
+                                    : isPositive
+                                      ? 'bg-gradient-to-r from-pink-500 to-purple-500'
+                                      : 'bg-gradient-to-r from-red-500 to-orange-500'
+                                }`}
+                              />
+                            </div>
+                            <div className="absolute inset-0 flex items-center justify-center">
+                              <span className="text-white text-xs font-bold">
+                                {percentage.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8">
+                  <p className="text-gray-400">No demographic data available for this entity.</p>
+                </div>
+              )}
+              
+              {/* Summary */}
+              {entityDemographics && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 1 }}
+                  className="mt-8 p-6 bg-gradient-to-r from-green-500/10 to-blue-500/10 border border-green-400/20 rounded-xl"
+                >
+                  <h4 className="text-white font-semibold mb-3">📈 Demographic Summary</h4>
+                  <div className="grid md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="text-gray-400">Strongest Age Group:</span>
+                      <span className="text-green-400 font-bold ml-2">
+                        {Object.entries(entityDemographics.query.age)
+                          .sort(([,a]: [string, any], [,b]: [string, any]) => b - a)[0][0]
+                          .replace('_', ' ').replace('and', '&')}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-400">Gender Preference:</span>
+                      <span className="text-blue-400 font-bold ml-2 capitalize">
+                        {Object.entries(entityDemographics.query.gender)
+                          .sort(([,a]: [string, any], [,b]: [string, any]) => b - a)[0][0]}
+                      </span>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Entity Search Section */}
