@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Users, TrendingUp, Zap, Search, Target, Filter, BarChart3, Globe, Star, ExternalLink } from 'lucide-react';
+import { MapPin, Users, TrendingUp, Zap, Search, Target, Filter, BarChart3, Globe, Star, ExternalLink, Brain } from 'lucide-react';
 import { qlooService } from '../services/qloo';
+import { togetherService, formatMarkdown } from '../services/together';
 import LeafletMap from '../components/LeafletMap';
 import HeatmapVisualization from '../components/HeatmapVisualization';
 
@@ -22,6 +23,10 @@ const InsightsPage: React.FC = () => {
   // Entity demographics state
   const [entityDemographics, setEntityDemographics] = useState<any[]>([]);
   const [loadingEntityDemographics, setLoadingEntityDemographics] = useState(false);
+  
+  // AI insights state
+  const [aiInsightsSummary, setAiInsightsSummary] = useState('');
+  const [generatingAiInsights, setGeneratingAiInsights] = useState(false);
   
   // Geo insights state
   const [selectedContentType, setSelectedContentType] = useState('');
@@ -128,6 +133,86 @@ const InsightsPage: React.FC = () => {
     setSelectedLocation({ lat, lng });
   };
 
+  // Generate AI insights summary
+  const generateAiInsightsSummary = async (heatmapData: any[], entityDemographics: any[], selectedEntity: any, selectedLocation: { lat: number; lng: number }, radius: number) => {
+    setGeneratingAiInsights(true);
+    try {
+      // Calculate statistics for the prompt
+      const avgAffinity = heatmapData.length > 0 
+        ? heatmapData.reduce((sum, point) => sum + point.query.affinity, 0) / heatmapData.length 
+        : 0;
+      
+      const highAffinityPoints = heatmapData.filter(point => point.query.affinity > 0.7);
+      const mediumAffinityPoints = heatmapData.filter(point => point.query.affinity >= 0.4 && point.query.affinity <= 0.7);
+      const lowAffinityPoints = heatmapData.filter(point => point.query.affinity < 0.4);
+      
+      // Extract demographic insights
+      let demographicInsights = '';
+      if (entityDemographics.length > 0) {
+        const demo = entityDemographics[0];
+        if (demo.query?.age) {
+          const ageInsights = Object.entries(demo.query.age)
+            .map(([ageGroup, value]) => `${ageGroup.replace(/_/g, ' ')}: ${((value as number) * 100).toFixed(1)}%`)
+            .join(', ');
+          demographicInsights += `Age demographics: ${ageInsights}. `;
+        }
+        if (demo.query?.gender) {
+          const genderInsights = Object.entries(demo.query.gender)
+            .map(([gender, value]) => `${gender}: ${((value as number) * 100).toFixed(1)}%`)
+            .join(', ');
+          demographicInsights += `Gender demographics: ${genderInsights}.`;
+        }
+      }
+      
+      const prompt = `You are a cultural data analyst specializing in location-based cultural insights and demographic analysis. Analyze the following cultural affinity data and provide comprehensive insights:
+
+**Entity Analysis**: ${selectedEntity?.name || 'Selected Entity'}
+**Location**: Latitude ${selectedLocation.lat.toFixed(4)}°, Longitude ${selectedLocation.lng.toFixed(4)}°
+**Analysis Radius**: ${(radius / 1000).toFixed(0)}km
+
+**Cultural Affinity Heatmap Results**:
+- Total data points analyzed: ${heatmapData.length}
+- Average cultural affinity: ${Math.round(avgAffinity * 100)}%
+- High affinity areas (70%+): ${highAffinityPoints.length} locations
+- Medium affinity areas (40-70%): ${mediumAffinityPoints.length} locations  
+- Low affinity areas (<40%): ${lowAffinityPoints.length} locations
+- Peak affinity score: ${heatmapData.length > 0 ? Math.round(Math.max(...heatmapData.map(p => p.query.affinity)) * 100) : 0}%
+
+**Demographic Analysis**:
+${demographicInsights || 'No demographic data available.'}
+
+**Top Affinity Locations**:
+${heatmapData.slice(0, 5).map((point, index) => 
+  `${index + 1}. Location (${point.location.latitude.toFixed(4)}°, ${point.location.longitude.toFixed(4)}°): ${Math.round(point.query.affinity * 100)}% affinity`
+).join('\n')}
+
+Please provide a comprehensive analysis including:
+
+1. **Cultural Landscape Overview**: What does this data tell us about the cultural landscape around this location?
+
+2. **Demographic Insights**: How do the demographic patterns relate to the cultural affinity? What does this suggest about the audience?
+
+3. **Geographic Patterns**: Are there any notable geographic clustering patterns in the high/medium/low affinity areas?
+
+4. **Strategic Recommendations**: Based on this analysis, what practical recommendations would you give for:
+   - Cultural events or activities in this area
+   - Target audience engagement strategies
+   - Optimal locations within the radius for maximum cultural resonance
+
+5. **Cultural Opportunities**: What unique cultural opportunities or insights does this location offer?
+
+Keep the analysis engaging, practical, and focused on actionable insights. Use specific data points to support your conclusions.`;
+
+      const analysis = await togetherService.generateCulturalAnalysis(prompt);
+      setAiInsightsSummary(analysis);
+    } catch (error) {
+      console.error('Error generating AI insights:', error);
+      setAiInsightsSummary('Unable to generate AI insights at this time. The cultural data analysis shows interesting patterns in the heatmap and demographic data that warrant further exploration.');
+    } finally {
+      setGeneratingAiInsights(false);
+    }
+  };
+
   // Generate cultural heatmap
   const generateHeatmap = async () => {
     if (!selectedEntity || !selectedLocation) return;
@@ -145,7 +230,10 @@ const InsightsPage: React.FC = () => {
       setHeatmapGenerated(true);
       
       // Also generate entity demographics
-      await generateEntityDemographics();
+      const demographicsData = await generateEntityDemographics();
+      
+      // Generate AI insights summary
+      await generateAiInsightsSummary(heatmapResults, demographicsData, selectedEntity, selectedLocation, radius);
     } catch (error) {
       console.error('Error generating heatmap:', error);
     } finally {
@@ -154,7 +242,7 @@ const InsightsPage: React.FC = () => {
   };
 
   // Generate entity demographics
-  const generateEntityDemographics = async () => {
+  const generateEntityDemographics = async (): Promise<any[]> => {
     if (!selectedEntity || !selectedLocation) return;
 
     setLoadingEntityDemographics(true);
@@ -174,9 +262,11 @@ const InsightsPage: React.FC = () => {
       const demographicsData = response.results?.demographics || [];
       
       setEntityDemographics(demographicsData);
+      return demographicsData;
     } catch (error) {
       console.error('Error generating entity demographics:', error);
       setEntityDemographics([]);
+      return [];
     } finally {
       setLoadingEntityDemographics(false);
     }
@@ -575,6 +665,94 @@ const InsightsPage: React.FC = () => {
                     <p className="text-gray-500 text-sm mt-2">Try selecting a different entity.</p>
                   </div>
                 )}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+        {/* AI Cultural Insights Summary */}
+        {heatmapGenerated && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8 mb-8"
+          >
+            <div className="flex items-center mb-6">
+              <Brain className="h-6 w-6 text-purple-400 mr-3" />
+              <h3 className="text-2xl font-semibold text-white">AI Cultural Analysis</h3>
+              {generatingAiInsights && (
+                <motion.div
+                  animate={{ opacity: [1, 0, 1] }}
+                  transition={{ duration: 1, repeat: Infinity }}
+                  className="ml-3"
+                >
+                  <div className="w-6 h-6 border-2 border-purple-400 border-t-transparent rounded-full animate-spin"></div>
+                </motion.div>
+              )}
+            </div>
+            
+            {generatingAiInsights ? (
+              <div className="text-center py-8">
+                <div className="text-gray-300 mb-4">Analyzing cultural patterns and demographic insights...</div>
+                <div className="text-sm text-gray-400">This may take a few moments</div>
+              </div>
+            ) : aiInsightsSummary ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5 }}
+                className="space-y-4"
+              >
+                <div className="prose prose-invert max-w-none">
+                  <div className="text-gray-300 leading-relaxed">
+                    <div 
+                      className="markdown-content"
+                      dangerouslySetInnerHTML={{ __html: formatMarkdown(aiInsightsSummary) }}
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid md:grid-cols-4 gap-4 mt-6 p-4 bg-gray-700/20 rounded-xl">
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-white">{heatmapData.length}</div>
+                    <div className="text-gray-400 text-sm">Data Points</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-purple-400">
+                      {Math.round((heatmapData.length > 0 ? heatmapData.reduce((sum, point) => sum + point.query.affinity, 0) / heatmapData.length : 0) * 100)}%
+                    </div>
+                    <div className="text-gray-400 text-sm">Avg Affinity</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-green-400">
+                      {heatmapData.filter(point => point.query.affinity > 0.7).length}
+                    </div>
+                    <div className="text-gray-400 text-sm">High Affinity</div>
+                  </div>
+                  <div className="text-center">
+                    <div className="text-2xl font-bold text-orange-400">{(radius / 1000).toFixed(0)}km</div>
+                    <div className="text-gray-400 text-sm">Radius</div>
+                  </div>
+                </div>
+                
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: 0.3 }}
+                  className="mt-4 p-3 bg-gradient-to-r from-purple-500/10 to-orange-500/10 border border-purple-400/20 rounded-xl"
+                >
+                  <p className="text-purple-300 text-sm font-medium">
+                    ✨ This analysis was generated using Google Gemma AI based on cultural affinity and demographic data from Qloo.
+                  </p>
+                </motion.div>
+              </motion.div>
+            ) : (
+              <div className="text-center py-8">
+                <div className="w-16 h-16 bg-gray-700 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Brain className="h-8 w-8 text-gray-400" />
+                </div>
+                <p className="text-gray-400 text-lg">AI analysis will be generated after heatmap creation.</p>
               </div>
             )}
           </motion.div>
