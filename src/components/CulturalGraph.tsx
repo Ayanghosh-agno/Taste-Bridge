@@ -311,22 +311,28 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
         }
       });
 
-    node.call(drag as any);
+    // Apply drag behavior to nodes
+    node.call(drag);
     
     // Add zoom and pan functionality
     const zoom = d3.zoom<SVGSVGElement, unknown>()
       .scaleExtent([0.5, 3])
       .on('zoom', (event) => {
-        svg.select('g').attr('transform', event.transform);
+        svg.selectAll('g').attr('transform', event.transform);
       });
     
     svg.call(zoom as any);
     
-    // Add reset button functionality
+    // Add reset zoom functionality
     svg.on('dblclick.zoom', () => {
       svg.transition()
         .duration(750)
-        .call(zoom.transform as any, d3.zoomIdentity);
+        .call(zoom.transform, d3.zoomIdentity);
+    });
+
+    // Prevent zoom on node double-click
+    node.on('dblclick', function(event) {
+      event.stopPropagation();
     });
 
   }, [personaData]);
