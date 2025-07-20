@@ -6,6 +6,7 @@ import PersonaPage from './pages/PersonaPage';
 import ComparePage from './pages/ComparePage';
 import TrendsPage from './pages/TrendsPage';
 import StoryPage from './pages/StoryPage';
+import InsightsPage from './pages/InsightsPage';
 import Footer from './components/Footer';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="/compare" element={<ComparePage />} />
           <Route path="/trends" element={<TrendsPage />} />
           <Route path="/story" element={<StoryPage />} />
+          <Route path="/insights" element={<InsightsPage />} />
         </Routes>
         <Footer />
       </div>

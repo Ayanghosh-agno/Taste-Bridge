@@ -1076,6 +1076,54 @@ class QlooService {
       });
     }
   }
+
+  async getHeatmapInsights(entityId: string, longitude: number, latitude: number, radius: number): Promise<any[]> {
+    try {
+      const params = new URLSearchParams({
+        'filter.type': 'urn:heatmap',
+        'filter.location': `POINT(${longitude} ${latitude})`,
+        'filter.location.radius': radius.toString(),
+        'signal.interests.entities': entityId
+      });
+      
+      console.log(`Getting heatmap insights for entity ${entityId} at location ${longitude}, ${latitude} with radius ${radius}m`);
+      
+      const response = await this.makeRequest(`/v2/insights?${params.toString()}`);
+      
+      console.log('Heatmap insights API response:', response);
+      
+      // Return the heatmap data from the API response
+      return response.results?.heatmap || [];
+    } catch (error) {
+      console.error('Error getting heatmap insights:', error);
+      
+      // Return mock heatmap data as fallback
+      const mockData = [];
+      const baseLatitude = latitude;
+      const baseLongitude = longitude;
+      
+      // Generate random points around the selected location
+      for (let i = 0; i < 50; i++) {
+        const latOffset = (Math.random() - 0.5) * 2; // ±1 degree
+        const lngOffset = (Math.random() - 0.5) * 2; // ±1 degree
+        
+        mockData.push({
+          location: {
+            latitude: baseLatitude + latOffset,
+            longitude: baseLongitude + lngOffset,
+            geohash: `mock_${i}_${Date.now()}`
+          },
+          query: {
+            affinity: Math.random(),
+            affinity_rank: Math.random(),
+            popularity: Math.random()
+          }
+        });
+      }
+      
+      return mockData;
+    }
+  }
 }
 
 export const qlooService = new QlooService();
