@@ -56,7 +56,7 @@ const InsightsPage: React.FC = () => {
   ];
 
   // Search for locations
-  const handleLocationSearch = async (query: string) => {
+  const handleEntitySearch = async (query: string) => {
     if (!query.trim()) {
       setSearchResults([]);
       return;
@@ -64,7 +64,7 @@ const InsightsPage: React.FC = () => {
 
     setSearching(true);
     try {
-      const results = await qlooService.searchEntities(query, 8, 'urn:entity:place');
+      const results = await qlooService.searchEntities(query, 8);
       setSearchResults(results);
     } catch (error) {
       console.error('Error searching locations:', error);
@@ -73,7 +73,7 @@ const InsightsPage: React.FC = () => {
     }
   };
 
-  const handleLocationSelect = (location: any) => {
+  const handleEntitySelect = (entity: any) => {
     // Extract coordinates from the location entity
     let lat, lng;
     
@@ -83,7 +83,7 @@ const InsightsPage: React.FC = () => {
     }
     
     // Fallback coordinates for major cities if geocode is not available
-    if (!lat || !lng) {
+    if (!lat || !lng && entity.type === 'urn:entity:place') {
       const cityCoords: Record<string, [number, number]> = {
         'new york': [40.7128, -74.0060],
         'london': [51.5074, -0.1278],
@@ -97,19 +97,26 @@ const InsightsPage: React.FC = () => {
         'mumbai': [19.0760, 72.8777]
       };
       
-      const cityName = location.name.toLowerCase();
+      const cityName = entity.name.toLowerCase();
       const coords = cityCoords[cityName];
       if (coords) {
         [lat, lng] = coords;
       }
     }
     
-    if (lat && lng) {
+    // Set selected entity regardless of coordinates
+    setSelectedEntity(entity);
+    setSearchQuery(entity.name);
+    setSearchResults([]);
+    
+    // Set location if coordinates are available
+    if (lat && lng && entity.type === 'urn:entity:place') {
       setSelectedLocation({ lat, lng });
-      setSearchQuery(location.name);
-      setSearchResults([]);
+    } else if (entity.type !== 'urn:entity:place') {
+      // For non-place entities, you might want to prompt user to select a location
+      // or use a default location
     } else {
-      console.error('Could not extract coordinates from location:', location);
+      console.error('Could not extract coordinates from location:', entity);
     }
   };
 
@@ -294,9 +301,9 @@ const InsightsPage: React.FC = () => {
                   value={searchQuery}
                   onChange={(e) => {
                     setSearchQuery(e.target.value);
-                    handleLocationSearch(e.target.value);
+                    handleEntitySearch(e.target.value);
                   }}
-                  placeholder="Search for cities, landmarks, or places..."
+                  placeholder="Search for artists, movies, books, places..."
                   className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
                 />
               </div>
@@ -307,16 +314,41 @@ const InsightsPage: React.FC = () => {
                   {searchResults.map((location, index) => (
                     <button
                       key={location.entity_id || index}
-                      onClick={() => handleLocationSelect(location)}
+                      onClick={() => handleEntitySelect(location)}
                       className="w-full p-4 text-left hover:bg-gray-600 transition-colors duration-200 border-b border-gray-600 last:border-b-0"
                     >
                       <div className="flex items-center gap-3">
-                        <MapPin className="h-5 w-5 text-purple-400" />
+                        {location.properties?.image?.url ? (
+                          <img 
+                            src={location.properties.image.url} 
+                            alt={location.name}
+                            className="w-14 h-14 rounded-xl object-cover border-2 border-gray-600"
+                          />
+                        ) : (
+                          <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-purple-500 to-orange-500 flex items-center justify-center border-2 border-gray-600">
+                            <span className="text-white font-bold text-lg">
+                              {location.name.charAt(0)}
+                            </span>
+                          </div>
+                        )}
                         <div>
-                          <h4 className="text-white font-semibold">{location.name}</h4>
-                          {location.properties?.geocode && (
-                            <p className="text-gray-400 text-sm">
-                              {location.properties.geocode.admin1_region}, {location.properties.geocode.country_code}
+                          <h4 className="text-white font-semibold text-lg">{location.name}</h4>
+                          <div className="flex items-center gap-2 mt-1">
+                            <span className="px-3 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full border border-purple-400/30">
+                              {location.types?.[0]?.replace('urn:entity:', '') || location.type?.replace('urn:entity:', '') || 'Entity'}
+                            </span>
+                            {location.popularity && (
+                              <div className="flex items-center gap-1">
+                                <Star className="h-4 w-4 text-yellow-400" />
+                                <span className="text-gray-400 text-sm">
+                                  {Math.round(location.popularity * 100)}%
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          {location.disambiguation && (
+                            <p className="text-gray-400 text-sm mt-1">
+                              {location.disambiguation}
                             </p>
                           )}
                         </div>
@@ -328,36 +360,22 @@ const InsightsPage: React.FC = () => {
 
               {/* Entity Selection */}
               <div className="mb-4">
-                <h4 className="text-white font-semibold mb-3">Select Cultural Entity</h4>
-                <div className="relative">
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-                  <input
-                    type="text"
-                    placeholder="Search for artists, movies, books..."
-                    onChange={(e) => handleLocationSearch(e.target.value)}
-                    className="w-full pl-12 pr-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400"
-                  />
-                </div>
-              </div>
-
-              {/* Selected Entity Display */}
-              {selectedEntity && (
-                <div className="p-4 bg-purple-500/20 border border-purple-400/30 rounded-xl mb-4">
-                  <div className="flex items-center gap-3">
-                    {selectedEntity.properties?.image?.url && (
-                      <img 
-                        src={selectedEntity.properties.image.url} 
-                        alt={selectedEntity.name}
-                        className="w-12 h-12 rounded-lg object-cover"
-                      />
-                    )}
-                    <div>
-                      <h4 className="text-white font-semibold">{selectedEntity.name}</h4>
-                      <p className="text-purple-300 text-sm">{selectedEntity.type?.replace('urn:entity:', '') || 'Entity'}</p>
+                {selectedEntity && (
+                  <div className="p-4 bg-purple-500/20 border border-purple-400/30 rounded-xl mb-4">
+                    <div className="flex items-center gap-3">
+                      {selectedEntity.properties?.image?.url && (
+                        <img 
+                          src={selectedEntity.properties.image.url} 
+                          alt={selectedEntity.name}
+                          className="w-12 h-12 rounded-lg object-cover"
+                        />
+                      )}
+                      <div>
+                        <h4 className="text-white font-semibold">{selectedEntity.name}</h4>
+                        <p className="text-purple-300 text-sm">{selectedEntity.type?.replace('urn:entity:', '') || 'Entity'}</p>
+                      </div>
                     </div>
                   </div>
-                </div>
-              )}
 
               {/* Radius Control */}
               <div className="mb-6">
@@ -365,7 +383,7 @@ const InsightsPage: React.FC = () => {
                 <input
                   type="range"
                   min="10000"
-                  max="200000"
+                  max="80000"
                   step="10000"
                   value={radius}
                   onChange={(e) => setRadius(parseInt(e.target.value))}
@@ -373,7 +391,7 @@ const InsightsPage: React.FC = () => {
                 />
                 <div className="flex justify-between text-gray-400 text-sm mt-2">
                   <span>10km</span>
-                  <span>200km</span>
+                  <span>80km</span>
                 </div>
               </div>
 
