@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3, Info } from 'lucide-react';
+import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3, Info, TrendingUp } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import LeafletMap from '../components/LeafletMap';
 import HeatmapVisualization from '../components/HeatmapVisualization';
@@ -27,7 +27,10 @@ const InsightsPage: React.FC = () => {
   
   // Location states
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [radius, setRadius] = useState(50000); // Default 50km
+  const [radius, setRadius] = useState(50000); // 50km in meters
+  const [selectedSubtypes, setSelectedSubtypes] = useState<string[]>([]);
+  const [availableSubtypes, setAvailableSubtypes] = useState<any[]>([]);
+  const [loadingSubtypes, setLoadingSubtypes] = useState(false);
   const [locationInput, setLocationInput] = useState('');
   
   // Heatmap states
@@ -46,6 +49,30 @@ const InsightsPage: React.FC = () => {
   // Entity demographics states
   const [entityDemographics, setEntityDemographics] = useState<any>(null);
   const [loadingEntityDemographics, setLoadingEntityDemographics] = useState(false);
+
+  // Geo insights states
+  const [selectedAge, setSelectedAge] = useState('');
+  const [selectedGender, setSelectedGender] = useState('');
+  const [selectedIncome, setSelectedIncome] = useState('');
+  const [geoResults, setGeoResults] = useState<any[]>([]);
+  const [loadingGeoInsights, setLoadingGeoInsights] = useState(false);
+
+  const ageGroups = [
+    { value: '', label: 'All Ages' },
+    { value: '18_24', label: '18-24' },
+    { value: '25_34', label: '25-34' },
+    { value: '35_44', label: '35-44' },
+    { value: '45_54', label: '45-54' },
+    { value: '55_64', label: '55-64' },
+    { value: '65_older', label: '65+' }
+  ];
+
+  const incomeGroups = [
+    { value: '', label: 'All Income Levels' },
+    { value: 'low', label: 'Low Income' },
+    { value: 'middle', label: 'Middle Income' },
+    { value: 'high', label: 'High Income' }
+  ];
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -85,6 +112,42 @@ const InsightsPage: React.FC = () => {
     setShowDemographics(false);
     setDemographicData([]);
     setEntityDemographics(null);
+  };
+
+  // Fetch subtypes when entity is selected
+  useEffect(() => {
+    if (selectedEntity) {
+      fetchSubtypes();
+    }
+  }, [selectedEntity]);
+
+  const fetchSubtypes = async () => {
+    if (!selectedEntity) return;
+    
+    setLoadingSubtypes(true);
+    try {
+      const entityType = selectedEntity.type || selectedEntity.types?.[0];
+      if (!entityType) return;
+      
+      const response = await qlooService.makeRequest(`/geospatial/describe?type=${encodeURIComponent(entityType)}`);
+      
+      const typeData = response.types?.[entityType];
+      if (typeData?.parameters?.['filter.tags']) {
+        setAvailableSubtypes(typeData.parameters['filter.tags']);
+      }
+    } catch (error) {
+      console.error('Error fetching subtypes:', error);
+    } finally {
+      setLoadingSubtypes(false);
+    }
+  };
+
+  const toggleSubtype = (subtypeId: string) => {
+    setSelectedSubtypes(prev => 
+      prev.includes(subtypeId) 
+        ? prev.filter(id => id !== subtypeId)
+        : [...prev, subtypeId]
+    );
   };
 
   const fetchEntityDemographics = async (entityId: string) => {
@@ -197,6 +260,48 @@ const InsightsPage: React.FC = () => {
     }
     
     return points;
+  };
+
+  const generateGeoInsights = async () => {
+    if (!selectedLocation || !selectedEntity) return;
+    
+    setLoadingGeoInsights(true);
+    try {
+      const entityType = selectedEntity.type || selectedEntity.types?.[0];
+      if (!entityType) return;
+      
+      const params = new URLSearchParams();
+      params.append('type', entityType);
+      params.append('target', `POINT(${selectedLocation.lng} ${selectedLocation.lat})`);
+      
+      // Convert radius from meters to miles
+      const radiusInMiles = Math.round(radius * 0.000621371);
+      params.append('target.radius', radiusInMiles.toString());
+      
+      // Add demographic biases
+      if (selectedAge) {
+        params.append('bias.age', selectedAge);
+      }
+      
+      if (selectedGender) {
+        params.append('bias.gender', selectedGender);
+      }
+      
+      // Add selected subtypes
+      if (selectedSubtypes.length > 0) {
+        params.append('filter.tags', selectedSubtypes.join(','));
+      }
+      
+      console.log('Calling geospatial API with params:', params.toString());
+      const response = await qlooService.makeRequest(`/geospatial?${params.toString()}`);
+      
+      console.log('Geospatial API response:', response);
+      setGeoResults(response.results || []);
+    } catch (error) {
+      console.error('Error generating geo insights:', error);
+    } finally {
+      setLoadingGeoInsights(false);
+    }
   };
 
   const generateDemographicInsights = async () => {
@@ -802,6 +907,280 @@ const InsightsPage: React.FC = () => {
               selectedLocation={selectedLocation}
               radius={radius}
             />
+          </motion.div>
+        )}
+
+        {/* Geo Insights */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.4 }}
+          className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+        >
+          <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center">
+              <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-teal-500 rounded-lg flex items-center justify-center mr-3">
+                <BarChart3 className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">Geo Insights</h3>
+            </div>
+            <button
+              onClick={generateGeoInsights}
+              disabled={!selectedLocation || !selectedEntity || loadingGeoInsights}
+              className="px-6 py-3 bg-gradient-to-r from-green-500 to-teal-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-green-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loadingGeoInsights ? 'Generating...' : 'Generate Insights'}
+            </button>
+          </div>
+          
+          <div className="grid md:grid-cols-4 gap-6 mb-6">
+            <div>
+              <label className="block text-white font-semibold mb-3">Age Group</label>
+              <select
+                value={selectedAge}
+                onChange={(e) => setSelectedAge(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-400"
+              >
+                {ageGroups.map(group => (
+                  <option key={group.value} value={group.value}>{group.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-white font-semibold mb-3">Gender</label>
+              <select
+                value={selectedGender}
+                onChange={(e) => setSelectedGender(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-400"
+              >
+                <option value="">All Genders</option>
+                <option value="male">Male</option>
+                <option value="female">Female</option>
+                <option value="non_binary">Non-Binary</option>
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-white font-semibold mb-3">Income Level</label>
+              <select
+                value={selectedIncome}
+                onChange={(e) => setSelectedIncome(e.target.value)}
+                className="w-full px-4 py-3 bg-gray-700 border border-gray-600 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-green-400"
+              >
+                {incomeGroups.map(group => (
+                  <option key={group.value} value={group.value}>{group.label}</option>
+                ))}
+              </select>
+            </div>
+            
+            <div>
+              <label className="block text-white font-semibold mb-3">Radius</label>
+              <div className="p-3 bg-gray-700/50 rounded-xl border border-gray-600">
+                <span className="text-white text-sm">
+                  {Math.round(radius * 0.000621371)} miles ({(radius / 1000).toFixed(0)}km)
+                </span>
+              </div>
+            </div>
+          </div>
+          
+          {/* Subtypes Section */}
+          {selectedEntity && (
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-4">
+                <label className="block text-white font-semibold">Subtypes</label>
+                {loadingSubtypes && (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-green-400 border-t-transparent rounded-full animate-spin"></div>
+                    <span className="text-gray-400 text-sm">Loading subtypes...</span>
+                  </div>
+                )}
+              </div>
+              
+              {availableSubtypes.length > 0 ? (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                  {availableSubtypes.map((subtype, index) => {
+                    const isSelected = selectedSubtypes.includes(subtype.id);
+                    
+                    return (
+                      <motion.button
+                        key={subtype.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ duration: 0.2, delay: index * 0.05 }}
+                        onClick={() => toggleSubtype(subtype.id)}
+                        className={`p-3 rounded-xl border transition-all duration-200 text-left ${
+                          isSelected
+                            ? 'border-green-400 bg-green-500/20 text-green-300'
+                            : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between">
+                          <span className="text-sm font-medium">{subtype.name}</span>
+                          {isSelected && (
+                            <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                              <span className="text-white text-xs">✓</span>
+                            </div>
+                          )}
+                        </div>
+                      </motion.button>
+                    );
+                  })}
+                </div>
+              ) : !loadingSubtypes && selectedEntity ? (
+                <div className="text-gray-400 text-center py-4">
+                  No subtypes available for this entity type
+                </div>
+              ) : null}
+            </div>
+          )}
+          
+          <div className="text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-700/40 rounded-xl border border-gray-600">
+              <Info className="h-4 w-4 text-gray-400" />
+              <span className="text-gray-300 text-sm">
+                {selectedLocation && selectedEntity
+                  ? `Ready to analyze ${selectedEntity.name} preferences around ${selectedLocation.lat.toFixed(4)}°, ${selectedLocation.lng.toFixed(4)}°`
+                  : "Select location and entity to generate geo insights"
+                }
+              </span>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Geo Analysis Results */}
+        {geoResults.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+          >
+            <div className="flex items-center mb-6">
+              <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg flex items-center justify-center mr-3">
+                <TrendingUp className="h-5 w-5 text-white" />
+              </div>
+              <h3 className="text-2xl font-semibold text-white">Geo Analysis Results</h3>
+              <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+                {geoResults.length} results found
+              </span>
+            </div>
+            
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {geoResults.map((entity, index) => (
+                <motion.div
+                  key={entity.entity_id || index}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3, delay: index * 0.1 }}
+                  className="p-6 bg-gray-700/30 rounded-xl border border-gray-600 hover:border-gray-500 transition-all duration-200"
+                >
+                  <div className="flex items-start gap-4">
+                    {entity.properties?.image?.url ? (
+                      <img 
+                        src={entity.properties.image.url} 
+                        alt={entity.name}
+                        className="w-16 h-16 rounded-xl object-cover border-2 border-gray-600"
+                      />
+                    ) : (
+                      <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-2 border-gray-600">
+                        <span className="text-white font-bold text-lg">
+                          {entity.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-lg mb-2">{entity.name}</h4>
+                      
+                      {entity.types && (
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {entity.types.map((type: string, typeIndex: number) => (
+                            <span 
+                              key={typeIndex}
+                              className="px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full border border-blue-400/30"
+                            >
+                              {type.replace('urn:entity:', '')}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {entity.query?.affinity !== undefined && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-gray-400 text-sm">Affinity:</span>
+                          <div className="flex-1 bg-gray-600 rounded-full h-2">
+                            <div 
+                              className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                              style={{ width: `${Math.min(entity.query.affinity * 100, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-white text-sm font-bold">
+                            {Math.round(entity.query.affinity * 100)}%
+                          </span>
+                        </div>
+                      )}
+                      
+                      {entity.popularity !== undefined && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-gray-400 text-sm">Popularity:</span>
+                          <div className="flex-1 bg-gray-600 rounded-full h-2">
+                            <div 
+                              className="h-full bg-gradient-to-r from-green-500 to-teal-500 rounded-full"
+                              style={{ width: `${Math.min(entity.popularity * 100, 100)}%` }}
+                            />
+                          </div>
+                          <span className="text-white text-sm font-bold">
+                            {Math.round(entity.popularity * 100)}%
+                          </span>
+                        </div>
+                      )}
+                      
+                      {entity.query?.rank_percent !== undefined && (
+                        <div className="flex items-center gap-2 mb-2">
+                          <span className="text-gray-400 text-sm">Rank:</span>
+                          <span className="text-orange-400 text-sm font-bold">
+                            {Math.round(entity.query.rank_percent * 100)}%
+                          </span>
+                        </div>
+                      )}
+                      
+                      {entity.tags && entity.tags.length > 0 && (
+                        <div className="mt-3">
+                          <div className="flex flex-wrap gap-1">
+                            {entity.tags.slice(0, 3).map((tag: any, tagIndex: number) => (
+                              <span 
+                                key={tagIndex}
+                                className="px-2 py-1 bg-gray-600/50 text-gray-300 text-xs rounded-full"
+                              >
+                                {tag.name}
+                              </span>
+                            ))}
+                            {entity.tags.length > 3 && (
+                              <span className="px-2 py-1 bg-gray-600/50 text-gray-400 text-xs rounded-full">
+                                +{entity.tags.length - 3} more
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                      
+                      {entity.properties?.short_description && (
+                        <p className="text-gray-400 text-sm mt-2 line-clamp-2">
+                          {entity.properties.short_description}
+                        </p>
+                      )}
+                      
+                      {entity.disambiguation && (
+                        <p className="text-gray-500 text-xs mt-1">
+                          {entity.disambiguation}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
           </motion.div>
         )}
 
