@@ -15,6 +15,7 @@ const PersonaPage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [loadingInsights, setLoadingInsights] = useState(false);
   const [loadingSummary, setLoadingSummary] = useState(false);
+  const [personaData, setPersonaData] = useState<any>(null);
   
   // Target Audience Explorer state
   const [audienceTypes, setAudienceTypes] = useState<any[]>([]);
@@ -77,7 +78,32 @@ const PersonaPage: React.FC = () => {
     if (savedCulturalIdentity) {
       setCulturalIdentity(savedCulturalIdentity);
     }
+
+    generatePersonaData();
   }, []);
+
+  const generatePersonaData = async () => {
+    try {
+      const savedEntities = localStorage.getItem('foundEntities');
+      if (savedEntities) {
+        const entities = JSON.parse(savedEntities);
+        const entityIds = entities.map((entity: any) => entity.entity_id).filter(Boolean);
+        
+        if (entityIds.length > 0) {
+          const insights = await qlooService.getInsights(entityIds);
+          setPersonaData({
+            entities: entities,
+            tags: insights.tags || [],
+            audiences: insights.audiences || [],
+            cultural_domains: insights.cultural_domains || [],
+            confidence: insights.confidence || 0.8
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error generating persona data:', error);
+    }
+  };
 
   const generatePersona = async (entities: any[]) => {
     setLoading(true);
@@ -1181,25 +1207,25 @@ Discover more at: https://tastebridge.app
             </motion.div>
           )}
         </motion.section>
-          {/* Cultural Network Visualization */}
-          {personaData && (
-            <motion.div
-              initial={{ opacity: 0, y: 30 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-              className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
-            >
-              <div className="flex items-center mb-6">
-                <Globe className="h-6 w-6 text-purple-400 mr-3" />
-                <h3 className="text-2xl font-semibold text-white">Cultural Network</h3>
-                <span className="ml-3 px-3 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full">
-                  Cross-Domain Insights
-                </span>
-              </div>
-              <CulturalGraph personaData={personaData} />
-            </motion.div>
-          )}
 
+        {/* Cultural Network Visualization */}
+        {personaData && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+          >
+            <div className="flex items-center mb-6">
+              <Globe className="h-6 w-6 text-purple-400 mr-3" />
+              <h3 className="text-2xl font-semibold text-white">Cultural Network</h3>
+              <span className="ml-3 px-3 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full">
+                Cross-Domain Insights
+              </span>
+            </div>
+            <CulturalGraph personaData={personaData} />
+          </motion.div>
+        )}
 
         {/* 4. Persona Summary */}
         <motion.section
