@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import * as d3 from 'd3';
+import NodeDetailModal from './NodeDetailModal';
 
 interface CulturalGraphProps {
   personaData: any;
@@ -8,6 +9,7 @@ interface CulturalGraphProps {
 
 const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
   const svgRef = useRef<SVGSVGElement>(null);
+  const [selectedNode, setSelectedNode] = React.useState<any>(null);
 
   useEffect(() => {
     if (!personaData || !svgRef.current) return;
@@ -36,7 +38,8 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
         group: 0, 
         radius: 18, 
         label: 'You',
-        type: 'user'
+        type: 'user',
+        entityData: null
       },
       // Tag nodes (from both persona and entity tags)
       ...allTags.map((tag: string, i: number) => ({
@@ -44,7 +47,8 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
         group: 1,
         radius: 8 + Math.random() * 4,
         label: tag,
-        type: 'tag'
+        type: 'tag',
+        entityData: null
       })),
       // Entity nodes
       ...personaData.entities.slice(0, 8).map((entity: any, i: number) => ({
@@ -53,7 +57,8 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
         radius: 6 + (entity.confidence || entity.popularity || 0.5) * 8,
         label: entity.name,
         type: 'entity',
-        entityType: entity.type?.replace('urn:entity:', '') || 'unknown'
+        entityType: entity.type?.replace('urn:entity:', '') || 'unknown',
+        entityData: entity
       }))
     ];
 
@@ -238,8 +243,17 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
           .attr('fill-opacity', 0.8);
       })
       .on('click', function(event: any, d: any) {
+        // Single click to show details
+        if (event.detail === 1) {
+          // Delay to distinguish from double-click
+          setTimeout(() => {
+            if (event.detail === 1) {
+              setSelectedNode(d);
+            }
+          }, 200);
+        }
         // Double-click to fix/unfix node position
-        if (event.detail === 2) {
+        else if (event.detail === 2) {
           if (d.fx !== null) {
             d.fx = null;
             d.fy = null;
@@ -427,6 +441,14 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
         Interactive cultural network - drag nodes to explore connections • 
         Dashed cyan lines show cross-domain affinities discovered by Qloo
       </p>
+      
+      {/* Node Detail Modal */}
+      {selectedNode && (
+        <NodeDetailModal 
+          node={selectedNode} 
+          onClose={() => setSelectedNode(null)} 
+        />
+      )}
     </motion.div>
   );
 };
