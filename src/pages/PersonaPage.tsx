@@ -5,6 +5,7 @@ import { User, Brain, TrendingUp, Globe, X, MapPin, Film, Music, BookOpen, Downl
 import { qlooService } from '../services/qloo';
 
 const PersonaPage: React.FC = () => {
+import CulturalGraph from '../components/CulturalGraph';
   const navigate = useNavigate();
   const [userTastes, setUserTastes] = useState<string>('');
   const [selectedEntities, setSelectedEntities] = useState<any[]>([]);
@@ -1180,6 +1181,25 @@ Discover more at: https://tastebridge.app
             </motion.div>
           )}
         </motion.section>
+          {/* Cultural Network Visualization */}
+          {personaData && (
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+            >
+              <div className="flex items-center mb-6">
+                <Globe className="h-6 w-6 text-purple-400 mr-3" />
+                <h3 className="text-2xl font-semibold text-white">Cultural Network</h3>
+                <span className="ml-3 px-3 py-1 bg-purple-500/20 text-purple-300 text-sm rounded-full">
+                  Cross-Domain Insights
+                </span>
+              </div>
+              <CulturalGraph personaData={personaData} />
+            </motion.div>
+          )}
+
 
         {/* 4. Persona Summary */}
         <motion.section
