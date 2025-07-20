@@ -4,8 +4,8 @@ import { motion } from 'framer-motion';
 import { User, Brain, TrendingUp, Globe, X, MapPin, Film, Music, BookOpen, Download, Share2, RefreshCw, ChevronLeft, ChevronRight, Search, Star, Plus, Check, ChevronDown, ChevronUp } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 
-const PersonaPage: React.FC = () => {
 import CulturalGraph from '../components/CulturalGraph';
+const PersonaPage: React.FC = () => {
   const navigate = useNavigate();
   const [userTastes, setUserTastes] = useState<string>('');
   const [selectedEntities, setSelectedEntities] = useState<any[]>([]);
