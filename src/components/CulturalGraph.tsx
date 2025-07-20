@@ -171,13 +171,97 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
       .attr('dy', '.35em')
       .style('pointer-events', 'none');
 
-    // Add tooltips for entities showing their type
+    // Enhanced hover effects
+    node
+      .on('mouseenter', function(event: any, d: any) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', (d: any) => d.radius * 1.3)
+          .attr('stroke-width', 4);
+        
+        // Highlight connected links
+        link
+          .transition()
+          .duration(200)
+          .attr('stroke-opacity', (l: any) => 
+            l.source.id === d.id || l.target.id === d.id ? 1 : 0.1
+          )
+          .attr('stroke-width', (l: any) => 
+            l.source.id === d.id || l.target.id === d.id ? 
+            (l.linkType === 'entity-tag' ? l.strength * 6 : l.strength * 4) : 
+            (l.linkType === 'entity-tag' ? l.strength * 4 : l.strength * 2)
+          );
+        
+        // Highlight connected nodes
+        node
+          .transition()
+          .duration(200)
+          .attr('fill-opacity', (n: any) => {
+            if (n.id === d.id) return 1;
+            const isConnected = links.some((l: any) => 
+              (l.source.id === d.id && l.target.id === n.id) ||
+              (l.target.id === d.id && l.source.id === n.id)
+            );
+            return isConnected ? 0.8 : 0.3;
+          });
+      })
+      .on('mouseleave', function(event: any, d: any) {
+        d3.select(this)
+          .transition()
+          .duration(200)
+          .attr('r', d.radius)
+          .attr('stroke-width', 2);
+        
+        // Reset all links
+        link
+          .transition()
+          .duration(200)
+          .attr('stroke-opacity', (l: any) => {
+            switch (l.linkType) {
+              case 'entity-tag': return 0.8;
+              default: return 0.6;
+            }
+          })
+          .attr('stroke-width', (l: any) => {
+            switch (l.linkType) {
+              case 'entity-tag': return l.strength * 4;
+              case 'user-entity': return l.strength * 3;
+              default: return l.strength * 2;
+            }
+          });
+        
+        // Reset all nodes
+        node
+          .transition()
+          .duration(200)
+          .attr('fill-opacity', 0.8);
+      })
+      .on('click', function(event: any, d: any) {
+        // Double-click to fix/unfix node position
+        if (event.detail === 2) {
+          if (d.fx !== null) {
+            d.fx = null;
+            d.fy = null;
+            d3.select(this).attr('stroke', '#fff');
+          } else {
+            d.fx = d.x;
+            d.fy = d.y;
+            d3.select(this).attr('stroke', '#fbbf24');
+          }
+          simulation.alpha(0.3).restart();
+        }
+      });
+
+    // Add tooltips with rich information
     node.append('title')
       .text((d: any) => {
         if (d.type === 'entity') {
-          return `${d.label}\nType: ${d.entityType}\nRadius: ${d.radius.toFixed(1)}`;
+          return `${d.label}\nType: ${d.entityType}\nInfluence: ${d.radius.toFixed(1)}\n\nClick and drag to move\nDouble-click to pin/unpin`;
         } else if (d.type === 'tag') {
-          return `Tag: ${d.label}`;
+          return `Cultural Tag: ${d.label}\nConnects different domains\n\nClick and drag to move\nDouble-click to pin/unpin`;
+        } else if (d.type === 'user') {
+          return `Your Cultural Center\nConnected to ${links.filter((l: any) => l.source === 'center' || l.target === 'center').length} elements\n\nClick and drag to move`;
         }
         return d.label;
       });
@@ -199,11 +283,16 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
     });
 
     // Add drag behavior
-    const drag = d3.drag()
+    const drag = d3.drag<SVGCircleElement, any>()
       .on('start', (event: any, d: any) => {
         if (!event.active) simulation.alphaTarget(0.3).restart();
         d.fx = d.x;
         d.fy = d.y;
+        
+        // Visual feedback for dragging
+        d3.select(event.sourceEvent.target)
+          .attr('stroke', '#a855f7')
+          .attr('stroke-width', 4);
       })
       .on('drag', (event: any, d: any) => {
         d.fx = event.x;
@@ -211,11 +300,34 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
       })
       .on('end', (event: any, d: any) => {
         if (!event.active) simulation.alphaTarget(0);
-        d.fx = null;
-        d.fy = null;
+        
+        // Only release if not pinned
+        if (d3.select(event.sourceEvent.target).attr('stroke') !== '#fbbf24') {
+          d.fx = null;
+          d.fy = null;
+          d3.select(event.sourceEvent.target)
+            .attr('stroke', '#fff')
+            .attr('stroke-width', 2);
+        }
       });
 
     node.call(drag as any);
+    
+    // Add zoom and pan functionality
+    const zoom = d3.zoom<SVGSVGElement, unknown>()
+      .scaleExtent([0.5, 3])
+      .on('zoom', (event) => {
+        svg.select('g').attr('transform', event.transform);
+      });
+    
+    svg.call(zoom as any);
+    
+    // Add reset button functionality
+    svg.on('dblclick.zoom', () => {
+      svg.transition()
+        .duration(750)
+        .call(zoom.transform as any, d3.zoomIdentity);
+    });
 
   }, [personaData]);
 
@@ -232,8 +344,35 @@ const CulturalGraph: React.FC<CulturalGraphProps> = ({ personaData }) => {
           width="100%"
           height="350"
           viewBox="0 0 700 350"
-          className="border border-gray-700 rounded-xl bg-gray-900/30"
+          className="border border-gray-700 rounded-xl bg-gray-900/30 cursor-grab active:cursor-grabbing"
         />
+      </div>
+      
+      {/* Interactive Controls Guide */}
+      <div className="bg-gray-800/30 border border-gray-600/30 rounded-xl p-4">
+        <h5 className="text-white font-medium mb-3 flex items-center gap-2">
+          <div className="w-5 h-5 bg-gradient-to-r from-purple-500 to-orange-500 rounded-full"></div>
+          Interactive Controls
+        </h5>
+        
+        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-3 text-sm">
+          <div className="flex items-center gap-2 text-gray-300">
+            <span className="text-purple-400">🖱️</span>
+            <span>Hover to highlight connections</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300">
+            <span className="text-orange-400">👆</span>
+            <span>Drag nodes to reposition</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300">
+            <span className="text-cyan-400">📌</span>
+            <span>Double-click to pin/unpin</span>
+          </div>
+          <div className="flex items-center gap-2 text-gray-300">
+            <span className="text-green-400">🔍</span>
+            <span>Scroll to zoom, double-click to reset</span>
+          </div>
+        </div>
       </div>
       
       {/* Cross-Domain Explanation */}
