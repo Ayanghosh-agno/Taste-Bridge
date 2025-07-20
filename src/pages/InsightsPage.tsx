@@ -385,7 +385,7 @@ Keep the analysis engaging, practical, and focused on actionable insights. Use s
           <div className="grid lg:grid-cols-2 gap-8">
             {/* Location Search */}
             <div>
-              <h4 className="text-white font-semibold mb-4">Search for a Location</h4>
+              <h4 className="text-white font-semibold mb-4">Search for an entity</h4>
               <div className="relative mb-4">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <input
