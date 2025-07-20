@@ -156,28 +156,39 @@ const InsightsPage: React.FC = () => {
 
     setLoadingEntityDemographics(true);
     try {
-      // Get insights for different entity types around the location
-      const entityTypes = ['urn:entity:place', 'urn:entity:movie', 'urn:entity:artist', 'urn:entity:book'];
-      const demographics = [];
-
-      for (const entityType of entityTypes) {
-        try {
-          const insights = await qlooService.getInsightsByType(entityType, [selectedEntity.entity_id], 5);
-          if (insights.length > 0) {
-            demographics.push({
-              type: entityType,
-              typeName: entityType.replace('urn:entity:', '').replace('_', ' '),
-              entities: insights
-            });
-          }
-        } catch (error) {
-          console.error(`Error getting insights for ${entityType}:`, error);
+      // Call demographics API with the selected entity
+      const params = new URLSearchParams({
+        'filter.type': 'urn:demographics',
+        'signal.interests.entities': selectedEntity.entity_id
+      });
+      
+      console.log('Calling demographics API with params:', params.toString());
+      
+      const response = await qlooService.makeRequest(`/v2/insights?${params.toString()}`);
+      
+      console.log('Demographics API response:', response);
+      
+      // Process the demographics response
+      const demographics = response.results?.entities || [];
+      
+      // Group demographics by type or category if available
+      const groupedDemographics = demographics.reduce((acc: any, demo: any) => {
+        const category = demo.subtype?.replace('urn:demographics:', '') || 'general';
+        if (!acc[category]) {
+          acc[category] = {
+            type: category,
+            typeName: category.replace('_', ' ').replace(/\b\w/g, (l: string) => l.toUpperCase()),
+            entities: []
+          };
         }
-      }
-
-      setEntityDemographics(demographics);
+        acc[category].entities.push(demo);
+        return acc;
+      }, {});
+      
+      setEntityDemographics(Object.values(groupedDemographics));
     } catch (error) {
       console.error('Error generating entity demographics:', error);
+      setEntityDemographics([]);
     } finally {
       setLoadingEntityDemographics(false);
     }
