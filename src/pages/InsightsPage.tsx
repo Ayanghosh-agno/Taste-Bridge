@@ -918,6 +918,7 @@ const InsightsPage: React.FC = () => {
                 </motion.div>
               )}
             </motion.div>
+        )}
 
         {/* Heatmap Results */}
         {showHeatmap && heatmapData.length > 0 && (
