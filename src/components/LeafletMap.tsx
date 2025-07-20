@@ -41,6 +41,7 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<L.Map | null>(null);
   const markersRef = useRef<L.LayerGroup | null>(null);
+  const selectedLocationMarkerRef = useRef<L.Marker | null>(null);
 
   useEffect(() => {
     if (!mapRef.current) return;
@@ -57,6 +58,75 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     // Add click handler for location selection
     if (onLocationSelect) {
       map.on('click', (e) => {
+        // Remove existing selected location marker
+        if (selectedLocationMarkerRef.current) {
+          map.removeLayer(selectedLocationMarkerRef.current);
+        }
+        
+        // Create new selected location marker
+        const selectedMarker = L.marker([e.latlng.lat, e.latlng.lng], {
+          icon: L.divIcon({
+            className: 'selected-location-marker',
+            html: `
+              <div style="
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(45deg, #a855f7, #f97316);
+                border: 4px solid white;
+                border-radius: 50%;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                animation: selected-pulse 2s infinite;
+                position: relative;
+              "></div>
+              <div style="
+                position: absolute;
+                top: -8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 0;
+                height: 0;
+                border-left: 8px solid transparent;
+                border-right: 8px solid transparent;
+                border-bottom: 12px solid #a855f7;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+              "></div>
+              <style>
+                @keyframes selected-pulse {
+                  0%, 100% { 
+                    transform: scale(1); 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 0 rgba(168, 85, 247, 0.7); 
+                  }
+                  50% { 
+                    transform: scale(1.1); 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 15px rgba(168, 85, 247, 0); 
+                  }
+                }
+              </style>
+            `,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24]
+          })
+        });
+        
+        selectedMarker.bindPopup(`
+          <div style="font-family: Inter, sans-serif; min-width: 200px;">
+            <div style="background: linear-gradient(45deg, #a855f7, #f97316); color: white; padding: 8px; margin: -8px -8px 8px -8px; border-radius: 4px;">
+              <strong>📍 Selected Location</strong>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong>Coordinates:</strong><br>
+              Latitude: ${e.latlng.lat.toFixed(6)}°<br>
+              Longitude: ${e.latlng.lng.toFixed(6)}°
+            </div>
+            <div style="font-size: 12px; color: #6b7280;">
+              Click "Generate Cultural Heatmap" to analyze this location
+            </div>
+          </div>
+        `);
+        
+        map.addLayer(selectedMarker);
+        selectedLocationMarkerRef.current = selectedMarker;
+        
         onLocationSelect(e.latlng.lat, e.latlng.lng);
       });
     }
@@ -66,6 +136,9 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
     markersRef.current = markersGroup;
 
     return () => {
+      if (selectedLocationMarkerRef.current) {
+        selectedLocationMarkerRef.current.remove();
+      }
       map.remove();
     };
   }, []);
@@ -74,6 +147,72 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
   useEffect(() => {
     if (mapInstanceRef.current) {
       mapInstanceRef.current.setView(center, zoom);
+      
+      // Add selected location marker if we have coordinates but no existing marker
+      if (center && !selectedLocationMarkerRef.current) {
+        const selectedMarker = L.marker(center, {
+          icon: L.divIcon({
+            className: 'selected-location-marker',
+            html: `
+              <div style="
+                width: 24px;
+                height: 24px;
+                background: linear-gradient(45deg, #a855f7, #f97316);
+                border: 4px solid white;
+                border-radius: 50%;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                animation: selected-pulse 2s infinite;
+                position: relative;
+              "></div>
+              <div style="
+                position: absolute;
+                top: -8px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 0;
+                height: 0;
+                border-left: 8px solid transparent;
+                border-right: 8px solid transparent;
+                border-bottom: 12px solid #a855f7;
+                filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+              "></div>
+              <style>
+                @keyframes selected-pulse {
+                  0%, 100% { 
+                    transform: scale(1); 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 0 rgba(168, 85, 247, 0.7); 
+                  }
+                  50% { 
+                    transform: scale(1.1); 
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.4), 0 0 0 15px rgba(168, 85, 247, 0); 
+                  }
+                }
+              </style>
+            `,
+            iconSize: [24, 24],
+            iconAnchor: [12, 24]
+          })
+        });
+        
+        selectedMarker.bindPopup(`
+          <div style="font-family: Inter, sans-serif; min-width: 200px;">
+            <div style="background: linear-gradient(45deg, #a855f7, #f97316); color: white; padding: 8px; margin: -8px -8px 8px -8px; border-radius: 4px;">
+              <strong>📍 Selected Location</strong>
+            </div>
+            <div style="margin-bottom: 8px;">
+              <strong>Coordinates:</strong><br>
+              Latitude: ${center[0].toFixed(6)}°<br>
+              Longitude: ${center[1].toFixed(6)}°
+            </div>
+            <div style="font-size: 12px; color: #6b7280;">
+              Click "Generate Cultural Heatmap" to analyze this location
+            </div>
+          </div>
+        `);
+        
+        mapInstanceRef.current.addLayer(selectedMarker);
+        selectedLocationMarkerRef.current = selectedMarker;
+      }
     }
   }, [center, zoom]);
 
@@ -164,47 +303,6 @@ const LeafletMap: React.FC<LeafletMapProps> = ({
       markersRef.current?.addLayer(marker);
     });
 
-    // Add center marker if we have a selected location
-    if (center) {
-      const centerMarker = L.marker(center, {
-        icon: L.divIcon({
-          className: 'center-marker',
-          html: `
-            <div style="
-              width: 20px;
-              height: 20px;
-              background: linear-gradient(45deg, #a855f7, #f97316);
-              border: 3px solid white;
-              border-radius: 50%;
-              box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-              animation: center-pulse 1.5s infinite;
-            "></div>
-            <style>
-              @keyframes center-pulse {
-                0%, 100% { transform: scale(1); }
-                50% { transform: scale(1.2); }
-              }
-            </style>
-          `,
-          iconSize: [20, 20],
-          iconAnchor: [10, 10]
-        })
-      });
-
-      centerMarker.bindPopup(`
-        <div style="font-family: Inter, sans-serif;">
-          <div style="background: linear-gradient(45deg, #a855f7, #f97316); color: white; padding: 8px; margin: -8px -8px 8px -8px; border-radius: 4px;">
-            <strong>Analysis Center</strong>
-          </div>
-          <div>
-            <strong>Entity:</strong> ${selectedEntity?.name || 'Unknown'}<br>
-            <strong>Coordinates:</strong> ${center[0].toFixed(4)}°, ${center[1].toFixed(4)}°
-          </div>
-        </div>
-      `);
-
-      markersRef.current?.addLayer(centerMarker);
-    }
 
   }, [heatmapData, selectedEntity, center]);
 
