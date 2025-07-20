@@ -295,11 +295,11 @@ const InsightsPage: React.FC = () => {
       // Add selected subtypes
       if (selectedSubtypes.length > 0) {
         params.append('filter.tags', selectedSubtypes.join(','));
-      }
+      const response = await qlooService.makeRequest(`/geospatial?${params.toString()}`);
       
       console.log('Calling geospatial API with params:', params.toString());
       const response = await qlooService.makeRequest(`/geospatial?${params.toString()}`);
-      
+      setGeoInsights(response.results || []);
       console.log('Geospatial API response:', response);
       setGeoResults(response.results || []);
     } catch (error) {
@@ -1267,35 +1267,341 @@ const InsightsPage: React.FC = () => {
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-8"
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 md:p-8"
           >
             <div className="flex items-center mb-8">
               <Users className="h-6 w-6 text-blue-400 mr-3" />
-              <h3 className="text-2xl font-semibold text-white">Demographic Analysis Results</h3>
+              <h3 className="text-xl md:text-2xl font-semibold text-white">Geo Insights</h3>
               <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
                 {demographicData.length} insights
               </span>
             </div>
             
-            {/* Results Grid */}
+            <div className="space-y-6 mb-8">
+              {/* Content Type Selection */}
+                <label className="block text-white font-semibold mb-4 text-lg">Content Type</label>
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                  {contentTypes.map(type => (
+                    <button
+                      key={type.value}
+                      onClick={() => {
+                        setSelectedContentType(type.value);
+                        fetchSubtypes(type.value);
+                      }}
+                      className={`p-4 rounded-xl border transition-all duration-200 hover:scale-105 ${
+                        selectedContentType === type.value
+                          ? 'border-blue-400 bg-blue-500/20 text-blue-300'
+                          : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                      }`}
+                    >
+                      <div className="text-center">
+                        <div className="text-2xl mb-2">{type.icon}</div>
+                        <div className="text-sm font-medium">{type.label}</div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+                      />
+                    ) : (
+              {/* Subtypes Section */}
+              {loadingSubtypes && (
+                <div className="text-center py-6">
+                  <div className="animate-spin w-8 h-8 border-2 border-blue-400 border-t-transparent rounded-full mx-auto mb-3"></div>
+                  <p className="text-gray-400">Loading subtypes...</p>
+                </div>
+              )}
+              
+              {availableSubtypes.length > 0 && (
+                <div>
+                  <label className="block text-white font-semibold mb-4 text-lg">
+                    Subtypes 
+                    <span className="ml-2 px-2 py-1 bg-blue-500/20 text-blue-300 text-xs rounded-full">
+                      {selectedSubtypes.length} selected
+                    </span>
+                  </label>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 max-h-64 overflow-y-auto">
+                    {availableSubtypes.map(subtype => (
+                      <label
+                        key={subtype.id}
+                        className={`flex items-center p-3 rounded-lg border cursor-pointer transition-all duration-200 hover:scale-105 ${
+                          selectedSubtypes.includes(subtype.id)
+                            ? 'border-green-400 bg-green-500/20 text-green-300'
+                            : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedSubtypes.includes(subtype.id)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedSubtypes(prev => [...prev, subtype.id]);
+                            } else {
+                              setSelectedSubtypes(prev => prev.filter(id => id !== subtype.id));
+                            }
+                          }}
+                          className="sr-only"
+                        />
+                        <div className={`w-4 h-4 rounded border-2 mr-3 flex items-center justify-center ${
+                          selectedSubtypes.includes(subtype.id)
+                            ? 'border-green-400 bg-green-400'
+                            : 'border-gray-500'
+                        }`}>
+                          {selectedSubtypes.includes(subtype.id) && (
+                            <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </div>
+                        <span className="text-sm font-medium">{subtype.name}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* Demographics Section */}
+              <div className="grid md:grid-cols-2 gap-6">
+                <div>
+                  <label className="block text-white font-semibold mb-4 text-lg">Gender</label>
+                  <div className="grid grid-cols-2 gap-3">
+                    {genderOptions.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSelectedGender(option.value)}
+                        className={`p-4 rounded-xl border transition-all duration-200 hover:scale-105 ${
+                          selectedGender === option.value
+                            ? 'border-purple-400 bg-purple-500/20 text-purple-300'
+                            : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">{option.icon}</div>
+                          <div className="text-sm font-medium">{option.label}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-white font-semibold mb-4 text-lg">Age Group</label>
+                  <div className="grid grid-cols-1 gap-3">
+                    {ageOptions.map(option => (
+                      <button
+                        key={option.value}
+                        onClick={() => setSelectedAge(option.value)}
+                        className={`p-4 rounded-xl border transition-all duration-200 hover:scale-105 ${
+                          selectedAge === option.value
+                            ? 'border-orange-400 bg-orange-500/20 text-orange-300'
+                            : 'border-gray-600 bg-gray-700/30 text-gray-300 hover:border-gray-500'
+                        }`}
+                      >
+                        <div className="text-center">
+                          <div className="text-2xl mb-2">{option.icon}</div>
+                          <div className="text-sm font-medium">{option.label}</div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Current Analysis Parameters */}
+            {(selectedContentType || selectedGender || selectedAge || selectedSubtypes.length > 0) && (
+              <div className="bg-gray-700/30 rounded-xl p-6 mb-6">
+                <h4 className="text-white font-semibold mb-4 flex items-center gap-2">
+                  <Target className="h-5 w-5 text-blue-400" />
+                  Current Analysis Parameters
+                </h4>
+                <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
+                  <div>
+                    <span className="text-gray-400">Content Type:</span>
+                    <div className="text-blue-300 font-medium">
+                      {selectedContentType ? contentTypes.find(t => t.value === selectedContentType)?.label : 'Not selected'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Gender:</span>
+                    <div className="text-purple-300 font-medium">
+                      {selectedGender ? genderOptions.find(g => g.value === selectedGender)?.label : 'Not selected'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Age Group:</span>
+                    <div className="text-orange-300 font-medium">
+                      {selectedAge ? ageOptions.find(a => a.value === selectedAge)?.label : 'Not selected'}
+                    </div>
+                  </div>
+                  <div>
+                    <span className="text-gray-400">Subtypes:</span>
+                    <div className="text-green-300 font-medium">
+                      {selectedSubtypes.length > 0 ? `${selectedSubtypes.length} selected` : 'None selected'}
+                    </div>
+                  </div>
+                </div>
+                {selectedSubtypes.length > 0 && (
+                  <div className="mt-4">
+                    <span className="text-gray-400 text-sm">Selected Subtypes:</span>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {selectedSubtypes.map(subtypeId => {
+                        const subtype = availableSubtypes.find(s => s.id === subtypeId);
+                        return (
+                          <span key={subtypeId} className="px-3 py-1 bg-green-500/20 text-green-300 text-xs rounded-full border border-green-400/30">
+                            {subtype?.name || subtypeId}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            <div className="text-center">
+              <button
+                onClick={generateGeoInsights}
+                disabled={!selectedLocation || !selectedContentType || generatingGeoInsights}
+                className="px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl font-semibold text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {generatingGeoInsights ? (
+                  <div className="flex items-center gap-3">
+                    <div className="animate-spin w-5 h-5 border-2 border-white border-t-transparent rounded-full"></div>
+                    Generating Geo Insights...
+                  </div>
+                ) : (
+                  'Generate Geo Insights'
+                )}
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {/* Geo Analysis Results */}
+        {geoInsights.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="bg-gray-800/50 backdrop-blur-md rounded-2xl p-6 md:p-8"
+          >
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center">
+                <BarChart3 className="h-6 w-6 text-blue-400 mr-3" />
+                <h3 className="text-xl md:text-2xl font-semibold text-white">Geo Analysis Results</h3>
+                <span className="ml-3 px-3 py-1 bg-blue-500/20 text-blue-300 text-sm rounded-full">
+                  {geoInsights.length} results
+                </span>
+              </div>
+            </div>
+            
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {demographicData.map((item, index) => (
+              {geoInsights.map((insight, index) => (
                 <motion.div
-                  key={item.entity_id || index}
+                  key={insight.entity_id || index}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3, delay: index * 0.1 }}
-                  className="group p-6 bg-gradient-to-br from-blue-500/10 to-purple-500/10 border border-blue-400/20 rounded-xl hover:from-blue-500/20 hover:to-purple-500/20 transition-all duration-300 hover:scale-105"
+                  className="p-6 bg-gray-700/30 rounded-xl border border-gray-600 hover:border-blue-400/50 transition-all duration-200 hover:scale-105"
                 >
-                  {/* Entity Image/Icon */}
-                  <div className="flex items-center gap-4 mb-4">
-                    {item.properties?.image?.url ? (
+                  <div className="flex items-start gap-4 mb-4">
+                    {insight.properties?.image?.url ? (
                       <img 
-                        src={item.properties.image.url} 
-                        alt={item.name}
-                        className="w-16 h-16 rounded-xl object-cover border-2 border-blue-400/30"
+                        src={insight.properties.image.url} 
+                        alt={insight.name}
+                        className="w-16 h-16 rounded-lg object-cover border-2 border-gray-600"
                       />
                     ) : (
+                      <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-2 border-gray-600">
+                        <span className="text-white font-bold text-lg">
+                          {insight.name.charAt(0)}
+                        </span>
+                      </div>
+                    )}
+                    <div className="flex-1">
+                      <h4 className="text-white font-semibold text-lg mb-1">{insight.name}</h4>
+                      {insight.disambiguation && (
+                        <p className="text-gray-400 text-sm mb-2">{insight.disambiguation}</p>
+                      )}
+                      {insight.properties?.short_description && (
+                        <p className="text-gray-300 text-sm line-clamp-2">{insight.properties.short_description}</p>
+                      )}
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {insight.query?.affinity && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-gray-400 text-sm">Affinity</span>
+                          <span className="text-blue-400 font-bold">
+                            {Math.round(insight.query.affinity * 100)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-600 rounded-full h-2">
+                          <div 
+                            className="h-full bg-gradient-to-r from-blue-500 to-purple-500 rounded-full"
+                            style={{ width: `${insight.query.affinity * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {insight.query?.rank_percent && (
+                      <div>
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="text-gray-400 text-sm">Rank Percentile</span>
+                          <span className="text-green-400 font-bold">
+                            {Math.round(insight.query.rank_percent * 100)}%
+                          </span>
+                        </div>
+                        <div className="w-full bg-gray-600 rounded-full h-2">
+                          <div 
+                            className="h-full bg-gradient-to-r from-green-500 to-emerald-500 rounded-full"
+                            style={{ width: `${insight.query.rank_percent * 100}%` }}
+                          />
+                        </div>
+                      </div>
+                    )}
+                    
+                    {insight.popularity && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-400 text-sm">Popularity</span>
+                        <div className="flex items-center gap-1">
+                          <Star className="h-4 w-4 text-yellow-400" />
+                          <span className="text-yellow-400 font-bold">
+                            {Math.round(insight.popularity * 100)}%
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {insight.properties?.external && (
+                      <div className="flex flex-wrap gap-2 mt-3">
+                        {insight.properties.external.imdb && (
+                          <a 
+                            href={`https://imdb.com/title/${insight.properties.external.imdb.id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="px-2 py-1 bg-yellow-500/20 text-yellow-300 text-xs rounded-full border border-yellow-400/30 hover:bg-yellow-500/30 transition-colors"
+                          >
+                            IMDB
+                          </a>
+                        )}
+                        {insight.properties.external.rottentomatoes && (
+                          <span className="px-2 py-1 bg-red-500/20 text-red-300 text-xs rounded-full border border-red-400/30">
+                            RT: {insight.properties.external.rottentomatoes.critic_rating}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </motion.div>
+        )}
+@@ .. @@
                       <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center border-2 border-blue-400/30">
                         <span className="text-white font-bold text-xl">
                           {item.name.charAt(0)}
