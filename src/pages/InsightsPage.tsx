@@ -302,7 +302,7 @@ const InsightsPage: React.FC = () => {
       const response_geo = await qlooService.makeRequest(`/geospatial?${params.toString()}`);
       setGeoInsights(response_geo.results || []);
       console.log('Geospatial API response:', response_geo);
-      setGeoResults(response_geo.results || []);
+      setGeoResults(response_geo.results || []); 
     } catch (error) {
       console.error('Error generating geo insights:', error);
     } finally {
