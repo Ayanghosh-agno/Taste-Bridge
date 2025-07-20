@@ -122,7 +122,6 @@ const InsightsPage: React.FC = () => {
 
   const handleMapLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
-    setSearchQuery(`${lat.toFixed(4)}, ${lng.toFixed(4)}`);
   };
 
   // Generate cultural heatmap
