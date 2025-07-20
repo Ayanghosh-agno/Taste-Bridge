@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3, Info, Loader } from 'lucide-react';
+import { Search, MapPin, Zap, X, Star, Settings, Play, Map, Users, Filter, BarChart3, Info } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import LeafletMap from '../components/LeafletMap';
 import HeatmapVisualization from '../components/HeatmapVisualization';
@@ -24,8 +24,6 @@ const InsightsPage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
-  const [typeParameters, setTypeParameters] = useState<any>(null);
-  const [loadingTypeParameters, setLoadingTypeParameters] = useState(false);
   
   // Location states
   const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
@@ -48,27 +46,6 @@ const InsightsPage: React.FC = () => {
   // Entity demographics states
   const [entityDemographics, setEntityDemographics] = useState<any>(null);
   const [loadingEntityDemographics, setLoadingEntityDemographics] = useState(false);
-
-  const fetchTypeParameters = async (entityType: string) => {
-    if (!entityType) return;
-    
-    setLoadingTypeParameters(true);
-    try {
-      const response = await qlooService.makeRequest(`/geospatial/describe?type=${encodeURIComponent(entityType)}`);
-      console.log('Geospatial describe response:', response);
-      
-      if (response.success && response.types && response.types[entityType]) {
-        setTypeParameters(response.types[entityType].parameters);
-      } else {
-        setTypeParameters(null);
-      }
-    } catch (error) {
-      console.error('Error fetching type parameters:', error);
-      setTypeParameters(null);
-    } finally {
-      setLoadingTypeParameters(false);
-    }
-  };
 
   const handleSearch = async (query: string) => {
     if (!query.trim()) {
@@ -429,49 +406,6 @@ const InsightsPage: React.FC = () => {
                 <Search className="h-6 w-6 text-purple-400 mr-3" />
                 <h3 className="text-xl font-semibold text-white">Select Entity</h3>
               </div>
-
-              {/* Type Parameters Display */}
-              {loadingTypeParameters && (
-                <div className="mt-4 p-4 bg-gray-700/30 rounded-xl">
-                  <div className="flex items-center gap-2">
-                    <Loader className="h-4 w-4 text-purple-400 animate-spin" />
-                    <span className="text-gray-300 text-sm">Loading content type parameters...</span>
-                  </div>
-                </div>
-              )}
-
-              {typeParameters && (
-                <div className="mt-4 p-4 bg-gray-700/30 rounded-xl">
-                  <h4 className="text-white font-semibold mb-3 flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-purple-400" />
-                    Available Filters for {demographicType.replace('urn:entity:', '')}
-                  </h4>
-                  <div className="space-y-3">
-                    {Object.entries(typeParameters).map(([paramKey, paramValues]: [string, any]) => (
-                      <div key={paramKey} className="space-y-2">
-                        <div className="text-sm font-medium text-gray-300 capitalize">
-                          {paramKey.replace('filter.', '').replace('_', ' ')}
-                        </div>
-                        <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-                          {Array.isArray(paramValues) && paramValues.slice(0, 10).map((param: any) => (
-                            <span
-                              key={param.id}
-                              className="px-2 py-1 bg-purple-500/20 text-purple-300 text-xs rounded-full border border-purple-400/30"
-                            >
-                              {param.name}
-                            </span>
-                          ))}
-                          {Array.isArray(paramValues) && paramValues.length > 10 && (
-                            <span className="px-2 py-1 bg-gray-600/50 text-gray-400 text-xs rounded-full">
-                              +{paramValues.length - 10} more
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
               
               <div className="relative">
                 <div className="relative">
