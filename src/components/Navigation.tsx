@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Globe, Menu, X } from 'lucide-react';
+import { Globe, Menu, X, Sun, Moon } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../hooks/useTheme';
 
 const Navigation: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { theme, toggleTheme } = useTheme();
 
   const navItems = [
     { path: '/', label: 'Home' },
@@ -59,7 +61,41 @@ const Navigation: React.FC = () => {
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle Button */}
+            <button
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              className="p-2 rounded-lg text-gray-300 hover:text-white hover:bg-gray-800 transition-all duration-200 group"
+            >
+              <div className="relative w-5 h-5">
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === 'light' ? 1 : 0,
+                    rotate: theme === 'light' ? 0 : 180,
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute inset-0"
+                >
+                  <Sun className="w-5 h-5 text-yellow-500 group-hover:text-yellow-400" />
+                </motion.div>
+                <motion.div
+                  initial={false}
+                  animate={{
+                    scale: theme === 'dark' ? 1 : 0,
+                    rotate: theme === 'dark' ? 0 : -180,
+                  }}
+                  transition={{ duration: 0.3, ease: "easeInOut" }}
+                  className="absolute inset-0"
+                >
+                  <Moon className="w-5 h-5 text-blue-400 group-hover:text-blue-300" />
+                </motion.div>
+              </div>
+            </button>
+
+            {/* Mobile menu button */}
+            <div className="md:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
               aria-label={isOpen ? 'Close navigation menu' : 'Open navigation menu'}
@@ -68,6 +104,7 @@ const Navigation: React.FC = () => {
             >
               {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
             </button>
+          </div>
           </div>
         </div>
       </div>
