@@ -626,7 +626,9 @@ Keep the analysis engaging, practical, and focused on actionable insights. Use s
                   center={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : [40.7128, -74.0060]}
                   zoom={selectedLocation ? 10 : 4}
                   heatmapData={heatmapData}
-                  onLocationSelect={handleMapLocationSelect}
+                  onLocationSelect={(lat: number, lng: number) => {
+                    setSelectedLocation({ lat, lng });
+                  }}
                   selectedEntity={selectedEntity}
                 />
                 <p className="text-gray-400 text-sm mt-3">
