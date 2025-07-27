@@ -18,6 +18,10 @@ const InsightsPage: React.FC = () => {
   const [locationError, setLocationError] = useState<string | null>(null);
   
   // Heatmap state
+  const handleLocationSelect = (lat: number, lng: number) => {
+    setSelectedLocation({ lat, lng });
+  };
+
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(false);
   const [heatmapGenerated, setHeatmapGenerated] = useState(false);
