@@ -8,7 +8,7 @@ import HeatmapVisualization from '../components/HeatmapVisualization';
 
 const InsightsPage: React.FC = () => {
   // Location and map state
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedLocation, C] = useState<{ lat: number; lng: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
