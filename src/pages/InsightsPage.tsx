@@ -163,7 +163,7 @@ const InsightsPage: React.FC = () => {
         console.log(`Current location set: ${latitude}, ${longitude}`);
         
         // Call handleLocationSelect to trigger marker display and state updates
-        handleLocationSelect(lat, lng);
+        handleLocationSelect(latitude, longitude);
       },
       (error) => {
         setGettingLocation(false);
