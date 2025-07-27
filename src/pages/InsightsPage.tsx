@@ -148,6 +148,10 @@ const InsightsPage: React.FC = () => {
       (position) => {
         const { latitude, longitude } = position.coords;
         setSelectedLocation({ lat: latitude, lng: longitude });
+        
+        // Trigger the same callback as manual map clicks to show marker
+        handleLocationSelect(latitude, longitude);
+        
         setGettingLocation(false);
         
         // Clear any previous error
