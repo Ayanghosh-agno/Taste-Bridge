@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Users, TrendingUp, Zap, Search, Target, Filter, BarChart3, Globe, Star, ExternalLink, Brain, Navigation } from 'lucide-react';
+import { MapPin, Users, TrendingUp, Zap, Search, Target, Filter, BarChart3, Globe, Star, ExternalLink, Brain, Navigation, X } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import { togetherService, formatMarkdown } from '../services/together';
 import LeafletMap from '../components/LeafletMap';
@@ -8,12 +8,11 @@ import HeatmapVisualization from '../components/HeatmapVisualization';
 
 const InsightsPage: React.FC = () => {
   // Location and map state
-  const [selectedLocation, C] = useState<{ lat: number; lng: number } | null>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
-  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(50000); // 50km in meters
   const [gettingLocation, setGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -21,6 +20,7 @@ const InsightsPage: React.FC = () => {
   // Heatmap state
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
+  };
 
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(false);
@@ -302,7 +302,7 @@ Keep the analysis engaging, practical, and focused on actionable insights. Use s
 
   // Generate entity demographics
   const generateEntityDemographics = async (): Promise<any[]> => {
-    if (!selectedEntity || !selectedLocation) return;
+    if (!selectedEntity || !selectedLocation) return [];
 
     setLoadingEntityDemographics(true);
     try {
