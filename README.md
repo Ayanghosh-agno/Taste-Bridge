@@ -1,7 +1,7 @@
 # TasteBridge - AI Cultural Persona Builder
 
 <div align="center">
-  <img src="https://images.pexels.com/photos/1181467/pexels-photo-1181467.jpeg" alt="TasteBridge Banner" width="800" height="300" style="object-fit: cover; border-radius: 10px;">
+  <img src="https://github.com/Ayanghosh-agno/Taste-Bridge/blob/main/public/Taste-Bridge-Thumbnail.png" alt="TasteBridge Banner" width="800" height="300" style="object-fit: cover; border-radius: 10px;">
 
   [![Netlify Status](https://api.netlify.com/api/v1/badges/08e27f12-adda-4e87-88d1-36fb22fce8cf/deploy-status)](https://app.netlify.com/projects/celadon-taffy-213814/deploys)
   [![React](https://img.shields.io/badge/React-18.3.1-blue.svg)](https://reactjs.org/)
