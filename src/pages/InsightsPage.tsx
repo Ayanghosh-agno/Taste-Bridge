@@ -627,6 +627,7 @@ Keep the analysis engaging, practical, and focused on actionable insights. Use s
                   zoom={selectedLocation ? 10 : 4}
                   heatmapData={heatmapData}
                   onLocationSelect={(lat: number, lng: number) => {
+                    console.log('Selected Lat:- '+lat+' and Long:- '+lng);
                     setSelectedLocation({ lat, lng });
                   }}
                   selectedEntity={selectedEntity}
