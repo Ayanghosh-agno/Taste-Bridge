@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { MapPin, Users, TrendingUp, Zap, Search, Target, Filter, BarChart3, Globe, Star, ExternalLink, Brain } from 'lucide-react';
+import { MapPin, Users, TrendingUp, Zap, Search, Target, Filter, BarChart3, Globe, Star, ExternalLink, Brain, Navigation } from 'lucide-react';
 import { qlooService } from '../services/qloo';
 import { togetherService, formatMarkdown } from '../services/together';
 import LeafletMap from '../components/LeafletMap';
@@ -14,6 +14,8 @@ const InsightsPage: React.FC = () => {
   const [searching, setSearching] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
   const [radius, setRadius] = useState(50000); // 50km in meters
+  const [gettingLocation, setGettingLocation] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
   
   // Heatmap state
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
@@ -131,6 +133,53 @@ const InsightsPage: React.FC = () => {
 
   const handleMapLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
+  };
+
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      setLocationError('Geolocation is not supported by this browser.');
+      return;
+    }
+
+    setGettingLocation(true);
+    setLocationError(null);
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        setSelectedLocation({ lat: latitude, lng: longitude });
+        setGettingLocation(false);
+        
+        // Clear any previous error
+        setLocationError(null);
+        
+        console.log(`Current location set: ${latitude}, ${longitude}`);
+      },
+      (error) => {
+        setGettingLocation(false);
+        let errorMessage = 'Unable to retrieve your location.';
+        
+        switch (error.code) {
+          case error.PERMISSION_DENIED:
+            errorMessage = 'Location access denied. Please enable location permissions and try again.';
+            break;
+          case error.POSITION_UNAVAILABLE:
+            errorMessage = 'Location information is unavailable.';
+            break;
+          case error.TIMEOUT:
+            errorMessage = 'Location request timed out. Please try again.';
+            break;
+        }
+        
+        setLocationError(errorMessage);
+        console.error('Geolocation error:', error);
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 300000 // 5 minutes
+      }
+    );
   };
 
   // Generate AI insights summary
@@ -501,17 +550,79 @@ Keep the analysis engaging, practical, and focused on actionable insights. Use s
 
             {/* Interactive Map */}
             <div>
-              <h4 className="text-white font-semibold mb-4">Interactive Map</h4>
-              <LeafletMap
-                center={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : [40.7128, -74.0060]}
-                zoom={selectedLocation ? 10 : 4}
-                heatmapData={heatmapData}
-                onLocationSelect={handleMapLocationSelect}
-                selectedEntity={selectedEntity}
-              />
-              <p className="text-gray-400 text-sm mt-3">
-                Click on the map to select a location for cultural analysis
-              </p>
+              <div className="space-y-6">
+                <h4 className="text-white font-semibold text-xl mb-4">Interactive Location Selection</h4>
+                <p className="text-gray-300 mb-6">
+                  Click anywhere on the map to analyze cultural preferences in that area, or use the controls below.
+                </p>
+                
+                {/* Current Location Button */}
+                <div className="flex flex-col sm:flex-row gap-4 mb-6">
+                  <button
+                    onClick={handleGetCurrentLocation}
+                    disabled={gettingLocation}
+                    className="flex items-center justify-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 disabled:from-gray-600 disabled:to-gray-700 rounded-xl font-semibold text-white transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 disabled:cursor-not-allowed group"
+                  >
+                    {gettingLocation ? (
+                      <>
+                        <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                        <span>Getting Location...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Navigation className="h-5 w-5 group-hover:scale-110 transition-transform duration-200" />
+                        <span>My Current Location</span>
+                      </>
+                    )}
+                  </button>
+                  
+                  {selectedLocation && (
+                    <div className="flex items-center gap-2 px-4 py-3 bg-green-500/20 border border-green-400/30 rounded-xl">
+                      <MapPin className="h-5 w-5 text-green-400" />
+                      <span className="text-green-300 text-sm font-medium">
+                        {selectedLocation.lat.toFixed(4)}°, {selectedLocation.lng.toFixed(4)}°
+                      </span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Location Error Display */}
+                {locationError && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="p-4 bg-red-500/20 border border-red-400/30 rounded-xl"
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className="w-6 h-6 bg-red-500 rounded-full flex items-center justify-center flex-shrink-0">
+                        <X className="h-4 w-4 text-white" />
+                      </div>
+                      <div>
+                        <div className="text-red-300 font-medium">Location Error</div>
+                        <div className="text-red-200 text-sm">{locationError}</div>
+                      </div>
+                      <button
+                        onClick={() => setLocationError(null)}
+                        className="ml-auto p-1 text-red-300 hover:text-red-100 transition-colors duration-200"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </motion.div>
+                )}
+
+                {/* Map */}
+                <LeafletMap
+                  center={selectedLocation ? [selectedLocation.lat, selectedLocation.lng] : [40.7128, -74.0060]}
+                  zoom={selectedLocation ? 10 : 4}
+                  heatmapData={heatmapData}
+                  onLocationSelect={handleMapLocationSelect}
+                  selectedEntity={selectedEntity}
+                />
+                <p className="text-gray-400 text-sm mt-3">
+                  Click on the map to select a location for cultural analysis
+                </p>
+              </div>
             </div>
           </div>
         </motion.div>
