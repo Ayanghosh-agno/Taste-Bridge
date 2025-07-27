@@ -13,6 +13,7 @@ const InsightsPage: React.FC = () => {
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searching, setSearching] = useState(false);
   const [selectedEntity, setSelectedEntity] = useState<any>(null);
+  const [selectedLocation, setSelectedLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [radius, setRadius] = useState(50000); // 50km in meters
   const [gettingLocation, setGettingLocation] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
@@ -20,7 +21,6 @@ const InsightsPage: React.FC = () => {
   // Heatmap state
   const handleLocationSelect = (lat: number, lng: number) => {
     setSelectedLocation({ lat, lng });
-  };
 
   const [heatmapData, setHeatmapData] = useState<any[]>([]);
   const [loadingHeatmap, setLoadingHeatmap] = useState(false);
